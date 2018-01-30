@@ -203,4 +203,4 @@ clean:
 	rm -f $(OBJECTS) $(TARGET_ELF) $(TARGET_HEX) $(BIN_DIR)/output.map
 
 flash: $(TARGET_BIN)
-	dfu-util -a 0 -s 0x08000000 -D $(TARGET_BIN)
+	dfu-util -a 0 -s 0x08000000:leave -D $(TARGET_BIN)
