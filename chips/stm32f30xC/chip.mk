@@ -65,7 +65,7 @@ CXX_FILE_SIZE_FLAGS = -ffunction-sections -fdata-sections -fno-exceptions -fno-r
 MCFLAGS = -mcpu=cortex-m4 -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
 
 # Chip-specific defines
-DEFS = -DSTM32F303xC -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER
+DEFS = -DSTM32F303xC -D__CORTEX_M4 -D__FPU_PRESENT -DARM_MATH_CM4 -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER
 
 CHIP_CFLAGS   = -c -std=c99   $(MCFLAGS) $(DEFS) $(C_FILE_SIZE_FLAGS)
 CHIP_CXXFLAGS = -c -std=c++11 $(MCFLAGS) $(DEFS) $(CXX_FILE_SIZE_FLAGS)
