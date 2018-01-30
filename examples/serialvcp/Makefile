@@ -26,7 +26,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-TARGET = blink
+TARGET = serialvcp
 
 BOARD ?= BETAFPV
 
@@ -93,7 +93,7 @@ USBCORE_SRC = $(notdir $(wildcard $(USBCORE_DIR)/src/*.c))
 
 # Add VCP source files
 VPATH := $(VPATH):$(VCP_DIR)
-# VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
+VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
 
 # Make a list of source files and includes
 VPATH := $(VPATH):$(SRC_DIR)

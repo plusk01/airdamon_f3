@@ -60,9 +60,9 @@
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void NMI_Handler(void)
-{
-}
+// void NMI_Handler(void)
+// {
+// }
 
 /*******************************************************************************
 * Function Name  : HardFault_Handler
@@ -71,13 +71,13 @@ void NMI_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void HardFault_Handler(void)
-{
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1)
-  {
-  }
-}
+// void HardFault_Handler(void)
+// {
+//   // Go to infinite loop when Hard Fault exception occurs 
+//   while (1)
+//   {
+//   }
+// }
 
 /*******************************************************************************
 * Function Name  : MemManage_Handler
@@ -86,13 +86,13 @@ void HardFault_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void MemManage_Handler(void)
-{
-  /* Go to infinite loop when Memory Manage exception occurs */
-  while (1)
-  {
-  }
-}
+// void MemManage_Handler(void)
+// {
+//   // Go to infinite loop when Memory Manage exception occurs 
+//   while (1)
+//   {
+//   }
+// }
 
 /*******************************************************************************
 * Function Name  : BusFault_Handler
@@ -101,13 +101,13 @@ void MemManage_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void BusFault_Handler(void)
-{
-  /* Go to infinite loop when Bus Fault exception occurs */
-  while (1)
-  {
-  }
-}
+// void BusFault_Handler(void)
+// {
+//   // Go to infinite loop when Bus Fault exception occurs 
+//   while (1)
+//   {
+//   }
+// }
 
 /*******************************************************************************
 * Function Name  : UsageFault_Handler
@@ -116,13 +116,13 @@ void BusFault_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void UsageFault_Handler(void)
-{
-  /* Go to infinite loop when Usage Fault exception occurs */
-  while (1)
-  {
-  }
-}
+// void UsageFault_Handler(void)
+// {
+//   // Go to infinite loop when Usage Fault exception occurs 
+//   while (1)
+//   {
+//   }
+// }
 
 /*******************************************************************************
 * Function Name  : SVC_Handler
@@ -131,9 +131,9 @@ void UsageFault_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SVC_Handler(void)
-{
-}
+// void SVC_Handler(void)
+// {
+// }
 
 /*******************************************************************************
 * Function Name  : DebugMon_Handler
@@ -142,9 +142,9 @@ void SVC_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void DebugMon_Handler(void)
-{
-}
+// void DebugMon_Handler(void)
+// {
+// }
 
 /*******************************************************************************
 * Function Name  : PendSV_Handler
@@ -153,9 +153,9 @@ void DebugMon_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void PendSV_Handler(void)
-{
-}
+// void PendSV_Handler(void)
+// {
+// }
 
 /*******************************************************************************
 * Function Name  : SysTick_Handler
@@ -164,9 +164,9 @@ void PendSV_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SysTick_Handler(void)
-{
-}
+// void SysTick_Handler(void)
+// {
+// }
 
 /*******************************************************************************
 * Function Name  : USB_IRQHandler
