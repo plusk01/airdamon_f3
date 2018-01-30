@@ -1,6 +1,8 @@
 #################################
 # Working directories
 #################################
+
+CHIP_DIR     := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 CMSIS_DIR     = $(LIB_DIR)/CMSIS
 STDPERIPH_DIR = $(LIB_DIR)/STM32F30x_StdPeriph_Driver
 USBCORE_DIR   = $(LIB_DIR)/STM32_USB-FS-Device_Driver
@@ -55,13 +57,16 @@ CXXSOURCES += $(CHIP_SRC)
 # Flags
 #################################
 
-FILE_SIZE_FLAGS += -ffunction-sections -fdata-sections -fno-exceptions
-CXX_FILE_SIZE_FLAGS = $(C_FILE_SIZE_FLAGS) -fno-rtti
+# Make the binary as small as possible
+C_FILE_SIZE_FLAGS   = -ffunction-sections -fdata-sections -fno-exceptions
+CXX_FILE_SIZE_FLAGS = -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti
 
-MCFLAGS=-mcpu=cortex-m4 -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
-DEFS=-DSTM32F303xC -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER
-CFLAGS=-c $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(FILE_SIZE_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c99
-CXXFLAGS=-c $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(CXX_FILE_SIZE_FLAGS) $(CXX_STRICT_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c++11
-LDFLAGS =-T $(LDSCRIPT) -Wl,-L$(STARTUP_DIR) $(MCFLAGS) -lm -lc --specs=nano.specs --specs=rdimon.specs $(ARCH_FLAGS) $(LTO_FLAGS) $(DEBUG_FLAGS) -static  -Wl,-gc-sections
+# Microcontroller flags
+MCFLAGS = -mcpu=cortex-m4 -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
 
-#################################
+# Chip-specific defines
+DEFS = -DSTM32F303xC -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER
+
+CHIP_CFLAGS   = -c -std=c99   $(MCFLAGS) $(DEFS) $(C_FILE_SIZE_FLAGS)
+CHIP_CXXFLAGS = -c -std=c++11 $(MCFLAGS) $(DEFS) $(CXX_FILE_SIZE_FLAGS)
+CHIP_LDFLAGS  = -T$(LDSCRIPT) $(MCFLAGS) -Wl,-L$(STARTUP_DIR) -lm -lc --specs=nano.specs --specs=rdimon.specs -static -Wl,-gc-sections

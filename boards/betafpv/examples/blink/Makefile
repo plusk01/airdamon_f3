@@ -1,7 +1,9 @@
 ###############################################################################
 # Generic Makefile Template for C/C++ for use with STM32 Microcontrollers
 #
-# Copyright (c) 2016 - James Jackson
+# Adapted by PCL to allow chip and board level abstraction
+#
+# Copyright (c) 2018 - James Jackson and Parker Lusk
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -28,115 +30,61 @@
 
 TARGET = blink
 
-BOARD ?= BETAFPV
-
 DEBUG ?= GDB
-
-#################################
-# GNU ARM Embedded Toolchain
-#################################
-CC=arm-none-eabi-gcc
-CXX=arm-none-eabi-g++
-LD=arm-none-eabi-ld
-AR=arm-none-eabi-ar
-AS=arm-none-eabi-as
-CP=arm-none-eabi-objcopy
-OD=arm-none-eabi-objdump
-NM=arm-none-eabi-nm
-SIZE=arm-none-eabi-size
-A2L=arm-none-eabi-addr2line
 
 #################################
 # Working directories
 #################################
-ROOT          = ../..
-SRC_DIR       = $(ROOT)/src
-CMSIS_DIR     = $(ROOT)/lib/CMSIS
-STDPERIPH_DIR = $(ROOT)/lib/STM32F30x_StdPeriph_Driver
-USBCORE_DIR   = $(ROOT)/lib/STM32_USB-FS-Device_Driver
-VCP_DIR       = $(ROOT)/src/vcp
-STARTUP_DIR   = $(ROOT)/lib/startup
-PRINTF_DIR    = $(ROOT)/lib/printf
-BIN_DIR       = obj
+
+TARGET_DIR    = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+BOARD_DIR     = $(realpath $(TARGET_DIR)../..)
+BIN_DIR       = build
+
+#################################
+# Board Files and Configuration
+#################################
+
+include $(BOARD_DIR)/board.mk
+
+#################################
+# Include Directories
+#################################
+
+INCLUDE_DIRS += 
 
 #################################
 # Source Files
 #################################
-VPATH := $(VPATH):$(STARTUP_DIR)
-LDSCRIPT = $(STARTUP_DIR)/stm32_flash_f303_256k.ld
-ASOURCES = startup_stm32f30x.S
 
-# Search path and source files for the CMSIS sources
-VPATH	 := $(VPATH):$(CMSIS_DIR)/CM1/CoreSupport
-VPATH  := $(VPATH):$(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x
+# Search path and source files for the target CXX sources
+VPATH     := $(VPATH):$(TARGET_DIR)
+TARGET_SRC = $(notdir $(wildcard $(TARGET_DIR)/*.cpp))
 
-# Search path and source files for the ST stdperiph library and exclude files we don't need
-VPATH		:= $(VPATH):$(STDPERIPH_DIR)/src
-STDPERIPH_SRC	 = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
-# EXCLUDES = stm32f4xx_crc.c \
-#            stm32f4xx_can.c \
-#            stm32f4xx_fmc.c \
-#            stm32f4xx_fsmc.c \
-#            stm32f4xx_sai.c \
-#            stm32f4xx_cec.c \
-#            stm32f4xx_dsi.c \
-#            stm32f4xx_flash_ramfunc.c \
-#            stm32f4xx_fmpi2c.c \
-#            stm32f4xx_lptim.c \
-#            stm32f4xx_qspi.c
-# STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
-
-
-# Search path and source files for the USB libraries and ignore files we don't need
-VPATH		:= $(VPATH):$(USBCORE_DIR)/src
-USBCORE_SRC = $(notdir $(wildcard $(USBCORE_DIR)/src/*.c))
-
-# Add VCP source files
-VPATH := $(VPATH):$(VCP_DIR)
-# VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
-
-# Make a list of source files and includes
-VPATH := $(VPATH):$(SRC_DIR)
-CSOURCES =  $(STDPERIPH_SRC) \
-            $(USBCORE_SRC) \
-            $(VCP_SRC) \
-            system.c \
-            system_stm32f30x.c
-
-
-CXXSOURCES = gpio.cpp \
-             led.cpp \
-             main.cpp
-
-INCLUDE_DIRS =  $(SRC_DIR) \
-                $(ROOT)/include \
-                $(ROOT)/lib \
-                $(STDPERIPH_DIR)/inc \
-                $(USBCORE_DIR)/inc \
-                $(CMSIS_DIR)/CM1/CoreSupport \
-                $(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x \
-                $(PRINTF_DIR) \
-                $(VCP_DIR)
-
-$(info VPATH = $(VPATH))
+# Append necessary C and CXX sources for this specific chip
+ASOURCES   +=
+CSOURCES   +=
+CXXSOURCES += $(TARGET_SRC)
 
 #################################
 # Object List
 #################################
-OBJECTS=$(addsuffix .o,$(addprefix $(BIN_DIR)/$(TARGET)/,$(basename $(ASOURCES))))
-OBJECTS+=$(addsuffix .o,$(addprefix $(BIN_DIR)/$(TARGET)/,$(basename $(CSOURCES))))
-OBJECTS+=$(addsuffix .o,$(addprefix $(BIN_DIR)/$(TARGET)/,$(basename $(CXXSOURCES))))
+
+OBJECTS  = $(addsuffix .o,$(addprefix $(BIN_DIR)/$(TARGET)/,$(basename $(ASOURCES))))
+OBJECTS += $(addsuffix .o,$(addprefix $(BIN_DIR)/$(TARGET)/,$(basename $(CSOURCES))))
+OBJECTS += $(addsuffix .o,$(addprefix $(BIN_DIR)/$(TARGET)/,$(basename $(CXXSOURCES))))
 
 #################################
 # Target Output Files
 #################################
-TARGET_ELF=$(BIN_DIR)/$(TARGET).elf
-TARGET_HEX=$(BIN_DIR)/$(TARGET).hex
-TARGET_BIN=$(BIN_DIR)/$(TARGET).bin
+
+TARGET_ELF = $(BIN_DIR)/$(TARGET).elf
+TARGET_HEX = $(BIN_DIR)/$(TARGET).hex
+TARGET_BIN = $(BIN_DIR)/$(TARGET).bin
 
 #################################
 # Debug Config
 #################################
+
 ifeq ($(DEBUG), GDB)
 $(info ************  BUILDING DEBUG SYMBOLS ************)
 DEBUG_FLAGS = -ggdb3
@@ -156,18 +104,35 @@ endif
 #  -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Wlogical-op -Wmissing-include-dirs \
 #  -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wunused -Wvariadic-macros \
 #  -Wctor-dtor-privacy -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
-FILE_SIZE_FLAGS += -ffunction-sections -fdata-sections -fno-exceptions
-CXX_FILE_SIZE_FLAGS = $(C_FILE_SIZE_FLAGS) -fno-rtti
 
-MCFLAGS=-mcpu=cortex-m4 -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
-DEFS=-DSTM32F303xC -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER -DTARGET_$(BOARD)
-CFLAGS=-c $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(FILE_SIZE_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c99
-CXXFLAGS=-c $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(CXX_FILE_SIZE_FLAGS) $(CXX_STRICT_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c++11
-LDFLAGS =-T $(LDSCRIPT) -Wl,-L$(STARTUP_DIR) $(MCFLAGS) -lm -lc --specs=nano.specs --specs=rdimon.specs $(ARCH_FLAGS) $(LTO_FLAGS) $(DEBUG_FLAGS) -static  -Wl,-gc-sections
+CFLAGS    = $(CHIP_CFLAGS)   $(BOARD_CFLAGS)   $(LTO_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS)
+CFLAGS   += $(addprefix -I,$(INCLUDE_DIRS))
+
+CXXFLAGS  = $(CHIP_CXXFLAGS) $(BOARD_CXXFLAGS) $(LTO_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS)
+CXXFLAGS += $(addprefix -I,$(INCLUDE_DIRS)) $(CXX_STRICT_FLAGS)
+
+LDFLAGS   = $(CHIP_LDFLAGS)  $(BOARD_LDFLAGS)
+
+
+#################################
+# GNU ARM Embedded Toolchain
+#################################
+
+CC   = arm-none-eabi-gcc
+CXX  = arm-none-eabi-g++
+LD   = arm-none-eabi-ld
+AR   = arm-none-eabi-ar
+AS   = arm-none-eabi-as
+CP   = arm-none-eabi-objcopy
+OD   = arm-none-eabi-objdump
+NM   = arm-none-eabi-nm
+SIZE = arm-none-eabi-size
+A2L  = arm-none-eabi-addr2line
 
 #################################
 # Build
 #################################
+
 $(TARGET_BIN): $(TARGET_HEX)
 	$(CP) -I ihex -O binary $< $@
 
@@ -197,10 +162,14 @@ $(BIN_DIR)/$(TARGET)/%.o: %.s
 #################################
 # Recipes
 #################################
-.PHONY: all flash clean
+
+.PHONY: flash clean
 
 clean:
 	rm -rf $(BIN_DIR)
 
 flash: $(TARGET_BIN)
 	dfu-util -a 0 -s 0x08000000:leave -D $(TARGET_BIN)
+
+print-%:
+	@echo '$*=$($*)'
