@@ -106,6 +106,7 @@ CSOURCES =  $(STDPERIPH_SRC) \
 
 CXXSOURCES = gpio.cpp \
              led.cpp \
+             vcp.cpp \
              main.cpp
 
 INCLUDE_DIRS =  $(SRC_DIR) \
