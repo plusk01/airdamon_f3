@@ -10,17 +10,19 @@ int main()
   info.init(GPIOE, GPIO_Pin_13);
   warn.init(GPIOE, GPIO_Pin_12);
 
-  UART uart1(USART1);
+  // UART uart1(USART1);
+
+  int i = 0;
 
   while(1)
   {
     warn.on();
     info.on();
-    delay(1000);
+    delay(100);
     info.off();
     warn.off();
-    delay(1000);
+    delay(100);
 
-    printf("hellooo!");
+    // printf("hellooo! %d\n", i++);
   }
 }
