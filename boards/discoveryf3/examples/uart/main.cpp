@@ -10,19 +10,24 @@ int main()
   info.init(GPIOE, GPIO_Pin_13);
   warn.init(GPIOE, GPIO_Pin_12);
 
-  // UART uart1(USART1);
+  UART uart1(USART1);
 
   int i = 0;
+
+  printf("\n**** UART (Rx / Tx capable) Example ****\n\n");
 
   while(1)
   {
     warn.on();
     info.on();
-    delay(100);
+    delay(300);
     info.off();
     warn.off();
-    delay(100);
+    delay(300);
 
-    // printf("hellooo! %d\n", i++);
+    if (uart1.rx_bytes_waiting())
+      printf("Read: %c\n", uart1.read_byte());
+    else
+      printf("Nothing to read! %d\n", i++);
   }
 }
