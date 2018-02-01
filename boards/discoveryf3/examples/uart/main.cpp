@@ -20,5 +20,7 @@ int main()
     info.off();
     warn.off();
     delay(1000);
+
+    printf("hellooo!");
   }
 }

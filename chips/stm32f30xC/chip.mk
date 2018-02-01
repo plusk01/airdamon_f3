@@ -6,6 +6,7 @@ CHIP_DIR     := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 CMSIS_DIR     = $(LIB_DIR)/CMSIS
 STDPERIPH_DIR = $(LIB_DIR)/STM32F30x_StdPeriph_Driver
 USBCORE_DIR   = $(LIB_DIR)/STM32_USB-FS-Device_Driver
+PRINTF_DIR    = $(LIB_DIR)/printf
 STARTUP_DIR   = $(CHIP_DIR)/startup
 VCP_DIR       = $(CHIP_DIR)/vcp
 
@@ -32,12 +33,16 @@ STARTUP_SRC = $(notdir $(wildcard $(STARTUP_DIR)/*.S))
 LDSCRIPT    = $(STARTUP_DIR)/stm32_flash_f303_256k.ld
 
 # Search path and source files for the ST stdperiph library
-VPATH		  := $(VPATH):$(STDPERIPH_DIR)/src
+VPATH         := $(VPATH):$(STDPERIPH_DIR)/src
 STDPERIPH_SRC  = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
 
 # Search path and source files for the USB libraries
-VPATH		:= $(VPATH):$(USBCORE_DIR)/src
+VPATH       := $(VPATH):$(USBCORE_DIR)/src
 USBCORE_SRC  = $(notdir $(wildcard $(USBCORE_DIR)/src/*.c))
+
+# Search path and source files for the printf library
+VPATH      := $(VPATH):$(PRINTF_DIR)
+PRINTF_SRC  = $(notdir $(wildcard $(PRINTF_DIR)/*.c))
 
 # Search path and source files for the USB VCP application source
 VPATH  := $(VPATH):$(VCP_DIR)
@@ -50,7 +55,7 @@ CHIP_SRC = gpio.cpp uart.cpp advanced.cpp
 
 # Append necessary C and CXX sources for this specific chip
 ASOURCES   += $(STARTUP_SRC)
-CSOURCES   += $(STDPERIPH_SRC) $(USBCORE_SRC) $(VCP_SRC)
+CSOURCES   += $(STDPERIPH_SRC) $(USBCORE_SRC) $(VCP_SRC) $(PRINTF_SRC)
 CXXSOURCES += $(CHIP_SRC)
 
 #################################

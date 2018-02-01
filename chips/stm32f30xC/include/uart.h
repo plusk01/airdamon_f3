@@ -12,6 +12,10 @@
 #include "gpio.h"
 #include "led.h"
 
+extern "C" {
+#include "printf.h"
+}
+
 class UART
 {
 public:
@@ -23,7 +27,7 @@ public:
   bool set_baud_rate(uint32_t baud);
   bool tx_buffer_empty();
   bool set_mode(uint8_t mode_);
-  void put_byte(uint8_t ch);
+  void put_byte_polling(uint8_t ch);
   bool flush();
   void begin_write();
   void end_write();

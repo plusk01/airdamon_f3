@@ -2,6 +2,26 @@
 
 static UART* UART1Ptr = nullptr;
 
+extern "C" void USART1_IRQHandler(void)
+{
+
+  UART1Ptr->toggleLED();
+  // delay(60);
+
+  (char)USART_ReceiveData(USART1);
+
+  // USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+  // USART_ClearITPendingBit(USART1, USART_IT_ORE);
+}
+
+static void _putc(void* p, char c)
+{
+  UART* pUART = static_cast<UART*>(p);
+  pUART->put_byte_polling(c);
+}
+
+// ----------------------------------------------------------------------------
+
 UART::UART(USART_TypeDef *_uart)
 {
   dev_ = _uart;
@@ -19,8 +39,6 @@ UART::UART(USART_TypeDef *_uart)
     // Enable clock to USART1, an APB2 peripheral
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
-    // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-
     // Enable clock to DMA1, an AHB peripheral
     // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
 
@@ -33,11 +51,8 @@ UART::UART(USART_TypeDef *_uart)
 
     led_.init(GPIOE, GPIO_Pin_14);
     led_.on();
-    // delay(200);
-    // led_.off();
-    // delay(200);
-    // led_.off();
 
+    init_printf(this, _putc);
   }
 
   init_UART(115200);
@@ -206,9 +221,15 @@ uint8_t UART::read_byte()
 }
 
 
-void UART::put_byte(uint8_t ch)
+void UART::put_byte_polling(uint8_t c)
 {
-  //  while (!USART_GetFlagStatus())
+  // Naive (and slow) polling implementation of sending a byte
+
+  // wait for the TX Register to be empty...
+  while (!USART_GetFlagStatus(dev_, USART_FLAG_TXE));
+
+  // Add the next data word to the TX register
+  USART_SendData(USART1, c);
 }
 
 uint32_t UART::rx_bytes_waiting()
@@ -281,17 +302,4 @@ void UART::register_rx_callback(std::function<void(uint8_t)> cb)
 void UART::unregister_rx_callback()
 {
   receive_CB_ = nullptr;
-}
-
-extern "C" void USART1_IRQHandler(void);
-void USART1_IRQHandler(void)
-{
-
-  UART1Ptr->toggleLED();
-  // delay(60);
-
-  (char)USART_ReceiveData(USART1);
-
-  // USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-  // USART_ClearITPendingBit(USART1, USART_IT_ORE);
 }
