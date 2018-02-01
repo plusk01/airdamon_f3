@@ -1,5 +1,5 @@
-#ifndef VCP_CLASS_H
-#define VCP_CLASS_H
+#ifndef VCP_H
+#define VCP_H
 
 #include "serial.h"
 #include "gpio.h"
@@ -47,4 +47,4 @@ private:
   GPIO tx_pin_;
 };
 
-#endif 
+#endif // VCP_H

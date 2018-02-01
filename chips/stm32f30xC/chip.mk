@@ -46,7 +46,7 @@ VPATH  := $(VPATH):$(VCP_DIR)
 # Search path and source files for the chip peripheral CXX sources
 VPATH   := $(VPATH):$(CHIP_DIR)/src
 CHIP_SRC = $(notdir $(wildcard $(CHIP_DIR)/src/*.cpp))
-CHIP_SRC = gpio.cpp
+CHIP_SRC = gpio.cpp uart.cpp advanced.cpp
 
 # Append necessary C and CXX sources for this specific chip
 ASOURCES   += $(STARTUP_SRC)

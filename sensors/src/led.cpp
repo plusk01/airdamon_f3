@@ -7,12 +7,12 @@ void LED::init(GPIO_TypeDef* gpio_port, uint16_t pin)
 
 void LED::on()
 {
-  write(GPIO::LOW);
+  write(GPIO::HIGH);
 }
 
 void LED::off()
 {
-  write(GPIO::HIGH);
+  write(GPIO::LOW);
 }
 
 

@@ -31,8 +31,8 @@
 // #include "stm32f4xx_spi.h"
 // #include "stm32f4xx_i2c.h"
 #include "stm32f30x_tim.h"
-// #include "stm32f4xx_dma.h"
-// #include "stm32f4xx_usart.h"
+#include "stm32f30x_dma.h"
+#include "stm32f30x_usart.h"
 // #include "misc.h"
 
 // typedef struct {
