@@ -1,6 +1,7 @@
 #ifndef VCP_H
 #define VCP_H
 
+#include "system.h"
 #include "gpio.h"
 
 extern "C" {
