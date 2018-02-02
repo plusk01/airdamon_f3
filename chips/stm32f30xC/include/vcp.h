@@ -1,30 +1,57 @@
 #ifndef VCP_H
 #define VCP_H
 
-#include "serial.h"
+// #include "serial.h"
 #include "gpio.h"
 
 extern "C" {
-#include "stm32f4xx_conf.h"
-#include "usbd_cdc_core.h"
-#include "usb_conf.h"
-#include "usbd_desc.h"
-#include "usbd_cdc_vcp.h"
-#include "usbd_usr.h"
-#include "usbd_ioreq.h"
+// #include "stm32f4xx_conf.h"
+// #include "usbd_cdc_core.h"
+// #include "usb_conf.h"
+// #include "usbd_desc.h"
+// #include "usbd_cdc_vcp.h"
+// #include "usbd_usr.h"
+// #include "usbd_ioreq.h"
+
+#include "hw_config.h"
+#include "usb_lib.h"
+#include "usb_desc.h"
+#include "usb_pwr.h"
+
+#include "printf.h"
 }
 
 
 class VCP
 {
 public:
-  void init();
-  void write(const uint8_t *ch, uint8_t len);
-  uint32_t rx_bytes_waiting();
-  uint32_t tx_bytes_free();
+  VCP();
+
+  //
+  // Rx functions
+  //
+
+  // Get a single byte from buffer. Must call
+  //  `rx_bytes_waiting()` beforehand.
   uint8_t read_byte();
-  bool set_baud_rate(uint32_t baud);
+
+  // Check to see if there are bytes to be read.
+  uint32_t rx_bytes_waiting();
+
+
+  //
+  // Tx functions
+  //
+
+  // send a byte array through the VCP peripheral
+  void write(uint8_t* c, uint8_t len);
+
+  // Is there any data in the buffer that needs to be sent?
   bool tx_buffer_empty();
+
+
+  uint32_t tx_bytes_free();
+  bool set_baud_rate(uint32_t baud);
   bool set_mode(uint8_t mode_);
   void put_byte(uint8_t ch);
   bool flush();

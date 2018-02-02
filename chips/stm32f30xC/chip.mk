@@ -46,12 +46,11 @@ PRINTF_SRC  = $(notdir $(wildcard $(PRINTF_DIR)/*.c))
 
 # Search path and source files for the USB VCP application source
 VPATH  := $(VPATH):$(VCP_DIR)
-# VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
+VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
 
 # Search path and source files for the chip peripheral CXX sources
 VPATH   := $(VPATH):$(CHIP_DIR)/src
 CHIP_SRC = $(notdir $(wildcard $(CHIP_DIR)/src/*.cpp))
-CHIP_SRC = gpio.cpp uart.cpp advanced.cpp
 
 # Append necessary C and CXX sources for this specific chip
 ASOURCES   += $(STARTUP_SRC)

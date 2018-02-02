@@ -78,7 +78,7 @@ void UART::write(uint8_t* ch, uint8_t len)
 void UART::start_DMA_transfer()
 {
   // Set the start of the transmission to the oldest data
-  Tx_DMA_Channel_->CMAR = (uint32_t)&tx_buffer_[tx_buffer_tail_];
+  Tx_DMA_Channel_->CMAR = reinterpret_cast<uint32_t>(&tx_buffer_[tx_buffer_tail_]);
 
   // save the last known DMA position (for checking data stomping)
   tx_old_DMA_pos_ = tx_buffer_tail_;
