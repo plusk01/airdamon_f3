@@ -105,7 +105,7 @@ endif
 #  -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wunused -Wvariadic-macros \
 #  -Wctor-dtor-privacy -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
 
-CFLAGS    = $(CHIP_CFLAGS) $(BOARD_CFLAGS) $(LTO_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS)
+CFLAGS    = $(CHIP_CFLAGS)   $(BOARD_CFLAGS)   $(LTO_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS)
 CFLAGS   += $(addprefix -I,$(INCLUDE_DIRS))
 
 CXXFLAGS  = $(CHIP_CXXFLAGS) $(BOARD_CXXFLAGS) $(LTO_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS)
