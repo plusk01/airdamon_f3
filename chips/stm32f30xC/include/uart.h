@@ -3,6 +3,11 @@
  * USART with polling or interrupts not supported by the class,
  * though could easily be added.
  *
+ * Except for the `printf` function, there is no logic preventing
+ * calling code to overwrite data in the Tx buffer. It is up to
+ * the caller to check the size of the data to write with the
+ * TX_BUFFER_SIZE and then split the data up accordingly.
+ *
  **/
 
 #ifndef UART_H
@@ -10,7 +15,6 @@
 
 #include "system.h"
 #include "gpio.h"
-#include "led.h"
 
 extern "C" {
 #include "printf.h"
@@ -40,11 +44,15 @@ public:
   // Tx functions
   //
 
-  // send a single byte through USARTx
-  void write_byte(uint8_t* c, uint8_t len);
+  // send a byte array through to the USARTx
+  void write(uint8_t* c, uint8_t len);
 
   // Is there any data in the buffer that needs to be sent?
   bool tx_buffer_empty();
+
+  // Would adding another byte of data stomp on data that
+  // the DMA could possibly still need for a transfer?
+  bool would_stomp_dma_data();
 
 
   // Start a DMA transfer from buffer to Tx reg of USARTx.
@@ -59,9 +67,10 @@ private:
 
   // Buffers to hold data managed by DMA, from/to Rx/Tx
   uint8_t rx_buffer_[RX_BUFFER_SIZE];
-  uint8_t tx_buffer_[RX_BUFFER_SIZE];
+  uint8_t tx_buffer_[TX_BUFFER_SIZE];
   uint16_t rx_buffer_head_, rx_buffer_tail_;
   uint16_t tx_buffer_head_, tx_buffer_tail_;
+  uint16_t tx_old_DMA_pos_;
 
   // USART GPIO pins
   GPIO rx_pin_;

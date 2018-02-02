@@ -7,7 +7,12 @@ static UART* UART1Ptr = nullptr;
 static void _putc(void* p, char c)
 {
   UART* pUART = static_cast<UART*>(p);
-  pUART->write_byte(reinterpret_cast<uint8_t*>(&c), 1);
+
+  // if the tx buffer is full, let's wait until there is some
+  // more space to prevent stomping on data in the buffer.
+  while (pUART->would_stomp_dma_data());
+
+  pUART->write(reinterpret_cast<uint8_t*>(&c), 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -51,7 +56,7 @@ UART::UART(USART_TypeDef* uart, uint32_t baudrate)
 
 // ----------------------------------------------------------------------------
 
-void UART::write_byte(uint8_t* ch, uint8_t len)
+void UART::write(uint8_t* ch, uint8_t len)
 {
   // Put data into the tx_buffer
   for (uint8_t i=0; i<len; i++)
@@ -62,7 +67,6 @@ void UART::write_byte(uint8_t* ch, uint8_t len)
     tx_buffer_head_ = (tx_buffer_head_ + 1) % TX_BUFFER_SIZE;
   }
 
-  // if (DMA_GetCmdStatus(Tx_DMA_Channel_) != ENABLE)
   // Ensure that the DMA transfer is finished (by making sure the channel
   // is disabled) before trying to initiate a new transfer
   if (!(Tx_DMA_Channel_->CCR & DMA_CCR_EN))
@@ -75,6 +79,9 @@ void UART::start_DMA_transfer()
 {
   // Set the start of the transmission to the oldest data
   Tx_DMA_Channel_->CMAR = (uint32_t)&tx_buffer_[tx_buffer_tail_];
+
+  // save the last known DMA position (for checking data stomping)
+  tx_old_DMA_pos_ = tx_buffer_tail_;
 
   // Check to see if the data in the buffer is contiguous or not
   // (i.e., has it wrapped around the end of the buffer?)
@@ -155,6 +162,15 @@ bool UART::tx_buffer_empty()
   return tx_buffer_head_ == tx_buffer_tail_;
 }
 
+// ----------------------------------------------------------------------------
+
+bool UART::would_stomp_dma_data()
+{
+  bool is_DMA_processing = (Tx_DMA_Channel_->CCR & DMA_CCR_EN);
+  bool would_stomp = (((tx_buffer_head_+1) % TX_BUFFER_SIZE) == tx_old_DMA_pos_);
+  return is_DMA_processing && would_stomp;
+}
+
 
 // ----------------------------------------------------------------------------
 // Private Methods
@@ -201,7 +217,7 @@ void UART::init_DMA()
   DMA_InitStructure.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_Byte;
   DMA_InitStructure.DMA_MemoryDataSize      = DMA_MemoryDataSize_Byte;
   DMA_InitStructure.DMA_Mode                = DMA_Mode_Normal;
-  DMA_InitStructure.DMA_Priority            = DMA_Priority_VeryHigh;
+  DMA_InitStructure.DMA_Priority            = DMA_Priority_High;
   DMA_InitStructure.DMA_M2M                 = DMA_M2M_Disable;
 
 
@@ -224,7 +240,7 @@ void UART::init_DMA()
   DMA_InitStructure.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_Byte;
   DMA_InitStructure.DMA_MemoryDataSize      = DMA_MemoryDataSize_Byte;
   DMA_InitStructure.DMA_Mode                = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_Priority            = DMA_Priority_Medium;
+  DMA_InitStructure.DMA_Priority            = DMA_Priority_High;
   DMA_InitStructure.DMA_M2M                 = DMA_M2M_Disable;
 
   // Configure the Rx DMA Channel Registers
@@ -248,6 +264,7 @@ void UART::init_DMA()
   rx_buffer_tail_ = RX_BUFFER_SIZE;
   tx_buffer_head_ = 0;
   tx_buffer_tail_ = 0;
+  tx_old_DMA_pos_ = 0;
 
   // Turn on the Rx DMA, since it is in circular mode
   DMA_Cmd(Rx_DMA_Channel_, ENABLE);
