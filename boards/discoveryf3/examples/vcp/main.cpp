@@ -12,6 +12,7 @@ int main()
   warn.init(GPIOE, GPIO_Pin_12);
 
   UART uart1(USART1);
+  uart1.connect_to_printf();
 
   int i = 0;
 
@@ -29,15 +30,13 @@ int main()
     warn.off();
     delay(300);
 
-    printf("About...\n");
-
     uint8_t msg[5] = "Hey\n";
     vcp.write(msg, 4);
 
-    // if (uart1.rx_bytes_waiting())
-    //   printf("Read: %c\n", uart1.read_byte());
-    // else
-    //   printf("Nothing to read! %d\n", i++);
+    if (vcp.rx_bytes_waiting())
+      printf("Read: %c\n", vcp.read_byte());
+    else
+      printf("Nothing to read! %d\n", i++);
 
   }
 }

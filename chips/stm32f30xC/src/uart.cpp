@@ -51,6 +51,12 @@ UART::UART(USART_TypeDef* uart, uint32_t baudrate)
   init_DMA();
   init_UART(baudrate);
   init_NVIC();
+}
+
+// ----------------------------------------------------------------------------
+
+void UART::connect_to_printf()
+{
   init_printf(this, _putc);
 }
 

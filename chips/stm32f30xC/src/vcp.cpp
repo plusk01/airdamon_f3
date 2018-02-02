@@ -2,6 +2,15 @@
 
 #define USB_TIMEOUT  5
 
+// printf function for putting a single character to screen
+static void _putc(void* p, char c)
+{
+  VCP* pVCP = static_cast<VCP*>(p);
+  pVCP->write(reinterpret_cast<uint8_t*>(&c), 1);
+}
+
+// ----------------------------------------------------------------------------
+
 VCP::VCP()
 {
   // Initialize the GPIOs for the pins
@@ -17,11 +26,19 @@ VCP::VCP()
   USB_Init();
 }
 
+// ----------------------------------------------------------------------------
+
+void VCP::connect_to_printf()
+{
+  init_printf(this, _putc);
+}
+
+// ----------------------------------------------------------------------------
+
 void VCP::write(uint8_t* ch, uint8_t len)
 {
   if (!usbIsConnected() || !usbIsConfigured()) return;
 
-  printf("about to send bytes...");
   uint32_t start = millis();
   while (len > 0)
   {
@@ -29,26 +46,12 @@ void VCP::write(uint8_t* ch, uint8_t len)
     len -= num_bytes_sent;
     ch += num_bytes_sent;
 
-    printf("Sent %d bytes\n", num_bytes_sent);
-
-    if (millis() > start + USB_TIMEOUT)
+    if (len == 0 || millis() > (start + USB_TIMEOUT))
       break;
   }
-  printf("sent!\n");
 }
 
-
-uint32_t VCP::rx_bytes_waiting()
-{
-  return CDC_Receive_BytesAvailable();
-}
-
-
-uint32_t VCP::tx_bytes_free()
-{
-  return CDC_Send_FreeBytes();
-}
-
+// ----------------------------------------------------------------------------
 
 uint8_t VCP::read_byte()
 {
@@ -60,45 +63,37 @@ uint8_t VCP::read_byte()
     return 0;
 }
 
+// ----------------------------------------------------------------------------
 
-bool VCP::set_baud_rate(uint32_t baud){}
+uint32_t VCP::tx_bytes_free()
+{
+  return CDC_Send_FreeBytes();
+}
+
+// ----------------------------------------------------------------------------
 
 bool VCP::tx_buffer_empty()
 {
   return CDC_Send_FreeBytes() > 0;
 }
 
-bool VCP::set_mode(uint8_t mode)
+// ----------------------------------------------------------------------------
+
+uint32_t VCP::rx_bytes_waiting()
 {
-  (void)mode;
+  return CDC_Receive_BytesAvailable();
 }
 
-void VCP::put_byte(uint8_t ch)
-{
-  CDC_Send_DATA(&ch, 1);
-}
-
-bool VCP::flush()
-{
-  // CDC_flush();
-  // return false;
-}
-void VCP::begin_write(){}
-void VCP::end_write(){}
-
-
-void VCP::register_rx_callback(void (*rx_callback_ptr)(uint8_t data))
-{
-  // rx_callback_ = rx_callback_ptr;
-  // Register_CDC_RxCallback(rx_callback_ptr);
-}
-
+// ----------------------------------------------------------------------------
 
 bool VCP::in_bulk_mode()
 {
   return false;
 }
 
+// ----------------------------------------------------------------------------
+// Private Methods
+// ----------------------------------------------------------------------------
 
 void VCP::send_disconnect_signal()
 {
