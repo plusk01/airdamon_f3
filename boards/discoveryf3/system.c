@@ -59,6 +59,7 @@ void systemInit(void)
     // RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
 
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE, ENABLE);
     // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
     // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);

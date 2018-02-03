@@ -17,7 +17,7 @@ static void _putc(void* p, char c)
 
 // ----------------------------------------------------------------------------
 
-UART::UART(USART_TypeDef* uart, uint32_t baudrate)
+void UART::init(USART_TypeDef* uart, uint32_t baudrate)
 {
   USARTx_ = uart;
 

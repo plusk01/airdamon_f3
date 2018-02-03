@@ -26,7 +26,7 @@ extern "C" {
 class UART
 {
 public:
-  UART(USART_TypeDef* uart, uint32_t baudrate=115200);
+  void init(USART_TypeDef* uart, uint32_t baudrate=115200);
 
   // Use this object for printf
   void connect_to_printf();
