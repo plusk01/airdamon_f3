@@ -12,9 +12,9 @@
   }
 
 // I2C ptrs used by IRQ handlers
-static I2C* I2C1_Ptr;
-static I2C* I2C2_Ptr;
-static I2C* I2C3_Ptr;
+static I2C* I2C1_Ptr = nullptr;
+static I2C* I2C2_Ptr = nullptr;
+static I2C* I2C3_Ptr = nullptr;
 
 // ----------------------------------------------------------------------------
 
@@ -38,12 +38,14 @@ void I2C::init(I2C_TypeDef* I2Cx)
 
     // Enable clock to I2C1, an APB1 peripheral
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+
+    I2C1_Ptr = this;
   }
 
   // Configure the I2Cx perhipheral
   I2C_InitTypeDef I2C_InitStructure;
   I2C_StructInit(&I2C_InitStructure);
-  I2C_InitStructure.I2C_Timing              = 0x00902025; //I2C_HIGHSPEED_TIMING; 
+  I2C_InitStructure.I2C_Timing              = I2C_HIGHSPEED_TIMING; // 0x00902025;
   I2C_InitStructure.I2C_AnalogFilter        = I2C_AnalogFilter_Enable;
   I2C_InitStructure.I2C_DigitalFilter       = 0x00;
   I2C_InitStructure.I2C_Mode                = I2C_Mode_I2C;
@@ -67,14 +69,24 @@ bool I2C::write(uint8_t addr, uint8_t reg, uint8_t data)
 
   // Wait for I2C BUSY flag to clear
   while_check(I2C_GetFlagStatus(I2Cx_, I2C_ISR_BUSY));
+
+  //
+  // Let slave know which register we want to write to
+  //
   
   I2C_TransferHandling(I2Cx_, addr, 1, I2C_Reload_Mode, I2C_Generate_Start_Write);
 
   // Wait for hardware to signal that the I2C_TXDR reg is empty and needs to be filled
   while_check(I2C_GetFlagStatus(I2Cx_, I2C_ISR_TXIS) == RESET);
 
+  // Send the register address
   I2C_SendData(I2Cx_, reg);
+
   while_check(I2C_GetFlagStatus(I2Cx_, I2C_ISR_TCR) == RESET);
+
+  //
+  // Send the data that should go in the register
+  //
 
   I2C_TransferHandling(I2Cx_, addr, 1, I2C_AutoEnd_Mode, I2C_No_StartStop);
 
@@ -83,6 +95,7 @@ bool I2C::write(uint8_t addr, uint8_t reg, uint8_t data)
 
   // Write data to TXDR
   I2C_SendData(I2Cx_, data);
+
 
   // Wait until STOPF flag is set
   while_check(I2C_GetFlagStatus(I2Cx_, I2C_ISR_STOPF) == RESET);

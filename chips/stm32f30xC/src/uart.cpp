@@ -2,6 +2,7 @@
 
 // pointers to UART objects for use in IRQ handlers
 static UART* UART1Ptr = nullptr;
+static UART* UART2Ptr = nullptr;
 
 // printf function for putting a single character to screen
 static void _putc(void* p, char c)
@@ -46,6 +47,32 @@ void UART::init(USART_TypeDef* uart, uint32_t baudrate)
 
     // Store the pointer to this object for use in IRQ handlers
     UART1Ptr = this;
+  }
+  else if (USARTx_ == USART2)
+  {
+    // Initialize GPIO pins for USART2
+    tx_pin_.init(GPIOA, GPIO_Pin_14, GPIO::PERIPH_OUT);
+    rx_pin_.init(GPIOA, GPIO_Pin_15, GPIO::PERIPH_IN);
+
+    // Set GPIO pins as alternate function
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_7);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_7);
+
+    // Enable clock to USART2, an APB1 peripheral
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+
+    // Enable clock to DMA1, an AHB peripheral
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+
+    Tx_DMA_IRQn_ = DMA1_Channel7_IRQn;
+
+    // Assign the appropriate DMA channels that
+    // are connected to the USART2 peripheral
+    Tx_DMA_Channel_ = DMA1_Channel7;
+    Rx_DMA_Channel_ = DMA1_Channel6;
+
+    // Store the pointer to this object for use in IRQ handlers
+    UART2Ptr = this;
   }
 
   init_DMA();
@@ -196,8 +223,8 @@ void UART::init_UART(uint32_t baudrate)
   USART_Init(USARTx_, &USART_InitStruct);
 
   // Enable interrupts on "receive buffer not empty" (i.e., byte received)
-  USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-  USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+  USART_ClearITPendingBit(USARTx_, USART_IT_RXNE);
+  USART_ITConfig(USARTx_, USART_IT_RXNE, ENABLE);
 
   // Enable the given USART perhipheral
   USART_Cmd(USARTx_, ENABLE);
@@ -310,4 +337,21 @@ extern "C" void DMA1_Channel4_IRQHandler(void)
     UART1Ptr->start_DMA_transfer();
 
   DMA_ClearITPendingBit(DMA1_IT_TC4);
+}
+
+// ----------------------------------------------------------------------------
+
+extern "C" void DMA1_Channel7_IRQHandler(void)
+{
+  // Signal that we are done with the latest DMA transfer
+  DMA_Cmd(DMA1_Channel7, DISABLE);
+
+  // If there is still data to process, start again.
+  // This happens when data was added to the buffer, but we were in
+  // the middle of a transfer. Now that the transfer is finished
+  // (marked by disabling the DMA), we can process the buffer.
+  if (!UART2Ptr->tx_buffer_empty())
+    UART2Ptr->start_DMA_transfer();
+
+  DMA_ClearITPendingBit(DMA1_IT_TC7);
 }
