@@ -50,7 +50,7 @@ include $(BOARD_DIR)/board.mk
 # Include Directories
 #################################
 
-INCLUDE_DIRS += $(realpath $(BOARD_DIR)../../lib/enum-flags/include)
+INCLUDE_DIRS +=
 
 #################################
 # Source Files

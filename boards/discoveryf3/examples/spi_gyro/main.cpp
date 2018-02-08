@@ -28,7 +28,7 @@ int main()
   sensors::L3GD20::DeviceParams gyro_params;
   sensors::L3GD20::FilterParams filt_params;
 
-  gyro_params.Power_Mode = sensors::L3GD20::Power_Mode::ACTIVE;
+  gyro_params.power_mode = sensors::L3GD20::Power_Mode::ACTIVE;
 
   warn.on();
   spi1.init(SPI1);

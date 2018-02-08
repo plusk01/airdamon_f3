@@ -2,34 +2,10 @@
 #define L3GD20_H
 
 #include <stdint.h>
+#include <type_traits> //for std::underlying_type
 
 #include "spi.h"
 #include "gpio.h"
-
-#include <flags/flags.hpp>
-
-enum class _Power_Mode: uint8_t { POWERDOWN = 0x00, ACTIVE = 0x08 };
-enum class _Output_DataRate: uint8_t { RATE1 = 0x00, RATE2 = 0x40, RATE3 = 0x80, RATE4 = 0xC0 };
-enum class _Axes: uint8_t { X = 0x02, Y = 0x01, Z = 0x04, ENABLE = 0x07, DISABLE = 0x00 };
-enum class _Bandwidth: uint8_t { BW1 = 0x00, BW2 = 0x10, BW3 = 0x20, BW4 = 0x30 };
-enum class _BD_Update: uint8_t { CONTINUOUS = 0x00, SINGLE = 0x80 };
-enum class _Endianness: uint8_t { LSB = 0x00, MSB = 0x40 };
-enum class _FS_Selection: uint8_t { FS250 = 0x00, FS500 = 0x10, FS2000 = 0x20 };
-
-ALLOW_FLAGS_FOR_ENUM(_Power_Mode)
-ALLOW_FLAGS_FOR_ENUM(_Output_DataRate)
-ALLOW_FLAGS_FOR_ENUM(_Axes)
-ALLOW_FLAGS_FOR_ENUM(_Bandwidth)
-ALLOW_FLAGS_FOR_ENUM(_BD_Update)
-ALLOW_FLAGS_FOR_ENUM(_Endianness)
-ALLOW_FLAGS_FOR_ENUM(_FS_Selection)
-
-enum class _HPF_Mode: uint8_t { NORMAL_RES = 0x00, REF_SIGNAL = 0x10, NORMAL = 0x20, AUTORESET_INT = 0x30 };
-enum class _HPF_CF: uint8_t {F0=0x00,F1=0x01,F2=0x02,F3=0x03,F4=0x04,F5=0x05,F6=0x06,F7=0x07,F8=0x08,F9=0x09};
-
-ALLOW_FLAGS_FOR_ENUM(_HPF_Mode)
-ALLOW_FLAGS_FOR_ENUM(_HPF_CF)
-
 
 namespace sensors
 {
@@ -38,29 +14,19 @@ namespace sensors
   {
   public:
     enum class Boot_Mode: uint8_t { NORMAL = 0x00, REBOOTMEMORY = 0x80 };
-    
-    using Power_Mode      = ::_Power_Mode;
-    using Output_DataRate = ::_Output_DataRate;
-    using Axes            = ::_Axes;
-    using Bandwidth       = ::_Bandwidth;
-    using BD_Update       = ::_BD_Update;
-    using Endianness      = ::_Endianness;
-    using FS_Selection    = ::_FS_Selection;
 
-    using HPF_Mode        = ::_HPF_Mode;
-    using HPF_CF          = ::_HPF_CF;
+    enum class Power_Mode: uint8_t { POWERDOWN = 0x00, ACTIVE = 0x08 };
+    enum class Output_DataRate: uint8_t { RATE1 = 0x00, RATE2 = 0x40, RATE3 = 0x80, RATE4 = 0xC0 };
+    enum class Axes: uint8_t { X = 0x02, Y = 0x01, Z = 0x04, ENABLE = 0x07, DISABLE = 0x00 };
+    enum class Bandwidth: uint8_t { BW1 = 0x00, BW2 = 0x10, BW3 = 0x20, BW4 = 0x30 };
+    enum class BD_Update: uint8_t { CONTINUOUS = 0x00, SINGLE = 0x80 };
+    enum class Endianness: uint8_t { LSB = 0x00, MSB = 0x40 };
+    enum class FS_Selection: uint8_t { FS250 = 0x00, FS500 = 0x10, FS2000 = 0x20 };
+
+    enum class HPF_Mode: uint8_t { NORMAL_RES = 0x00, REF_SIGNAL = 0x10, NORMAL = 0x20, AUTORESET_INT = 0x30 };
+    enum class HPF_CF: uint8_t {F0=0x00,F1=0x01,F2=0x02,F3=0x03,F4=0x04,F5=0x05,F6=0x06,F7=0x07,F8=0x08,F9=0x09};
 
   private:
-    using power_mode_t      = ::flags::flags<Power_Mode>;
-    using output_datarate_t = ::flags::flags<Output_DataRate>;
-    using axes_t            = ::flags::flags<Axes>;
-    using bandwidth_t       = ::flags::flags<Bandwidth>;
-    using bd_update_t       = ::flags::flags<BD_Update>;
-    using endianess_t       = ::flags::flags<Endianness>;
-    using fs_selection_t    = ::flags::flags<FS_Selection>;
-
-    using hpf_mode_t        = ::flags::flags<HPF_Mode>;
-    using hpf_cf_t          = ::flags::flags<HPF_CF>;
 
     // define the registers
     enum class RegAddr : uint8_t
@@ -93,24 +59,32 @@ namespace sensors
       INT1_DURATION = 0x38
     };
 
+    // This constexpr (compile-time) function extracts the underlying
+    // value of an enumeration based on its underlying type
+    template<typename E>
+    constexpr auto uv(E e) -> typename std::underlying_type<E>::type 
+    {
+       return static_cast<typename std::underlying_type<E>::type>(e);
+    }
+
   public:
 
     struct DeviceParams
     {
-      power_mode_t      Power_Mode;         // Power-down/Sleep/Normal mode
-      output_datarate_t Output_DataRate;    // OUT datarate
-      axes_t            Axes_Enable;        // Axes enabled
-      bandwidth_t       Bandwidth;          // Bandwidth selection
-      bd_update_t       BlockData_Update;   // Block data update
-      endianess_t       Endianness;         // Endianness of data
-      fs_selection_t    Full_Scale;         // Full-scale selection
+      Power_Mode      power_mode;         // Power-down/Sleep/Normal mode
+      Output_DataRate output_datarate;    // OUT datarate
+      Axes            axes_enable;        // Axes enabled
+      Bandwidth       bandwidth;          // Bandwidth selection
+      BD_Update       blockdata_update;   // Block data update
+      Endianness      endianness;         // Endianness of data
+      FS_Selection    full_scale;         // Full-scale selection
     };
 
 
     struct FilterParams
     {
-      hpf_mode_t  HPF_Mode;           // Internal filter mode
-      hpf_cf_t    HPF_Cutoff_Freq;    // High-pass filter cut-off frequency
+      HPF_Mode  hpf_mode;           // Internal filter mode
+      HPF_CF    hpf_cutoff_freq;    // High-pass filter cut-off frequency
     };
 
     struct InterruptParams

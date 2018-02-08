@@ -10,14 +10,14 @@ void L3GD20::init(SPI* spi, DeviceParams* params)
   uint8_t ctrl1 = 0x00, ctrl4 = 0x00;
 
   // Configure MEMS: data rate, power mode, full scale and axes
-  ctrl1 |= params->Power_Mode.underlying_value()
-        |  params->Output_DataRate.underlying_value()
-        |  params->Axes_Enable.underlying_value()
-        |  params->Bandwidth.underlying_value();
+  ctrl1 |= uv(params->power_mode)
+        |  uv(params->output_datarate)
+        |  uv(params->axes_enable)
+        |  uv(params->bandwidth);
   
-  ctrl4 |= params->BlockData_Update.underlying_value()
-        |  params->Endianness.underlying_value()
-        |  params->Full_Scale.underlying_value();
+  ctrl4 |= uv(params->blockdata_update)
+        |  uv(params->endianness)
+        |  uv(params->full_scale);
                     
   // Write value to MEMS CTRL_REG1 regsister
   write(RegAddr::CTRL_REG1, &ctrl1, 1);
@@ -57,7 +57,7 @@ void L3GD20::reboot()
 
   // Reboot the memory content of the L3GD20
   read(RegAddr::CTRL_REG5, &tmpreg, 1);
-  tmpreg |= static_cast<uint8_t>(Boot_Mode::REBOOTMEMORY);
+  tmpreg |= uv(Boot_Mode::REBOOTMEMORY);
   write(RegAddr::CTRL_REG5, &tmpreg, 1);
 }
 
