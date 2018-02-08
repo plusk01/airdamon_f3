@@ -15,8 +15,8 @@ public:
   void init(SPI_TypeDef* SPIx);
   void set_divisor(uint16_t new_divisor);
 
-  bool transfer(uint8_t *out_data, uint32_t num_bytes, uint8_t* in_data, GPIO* cs = NULL, void (*cb)(void) = NULL);
-  uint8_t transfer_byte(uint8_t data, GPIO* cs = NULL);
+  bool transfer(uint8_t *out_data, uint32_t num_bytes, uint8_t* in_data, void (*cb)(void) = NULL);
+  uint8_t transfer_byte(uint8_t data);
 
   void transfer_complete_cb();
   inline bool is_busy() {return busy_;}
@@ -26,7 +26,6 @@ private:
   GPIO sck_;
   GPIO mosi_;
   GPIO miso_;
-  GPIO cs_;
 
   DMA_InitTypeDef DMA_InitStructure_;
 

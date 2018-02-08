@@ -141,44 +141,29 @@ void SPI::set_divisor(uint16_t new_divisor) {
   SPI_Cmd(SPIx_, ENABLE);
 }
 
-// void SPI::enable(GPIO& cs) {
-//   cs.write(GPIO::LOW);
-// }
+// ----------------------------------------------------------------------------
 
-// void SPI::disable(GPIO& cs) {
-//   cs.write(GPIO::HIGH);
-// }
+uint8_t SPI::transfer_byte(uint8_t data)
+{
+  uint16_t spiTimeout = 0x1000;
 
-// uint8_t SPI::transfer_byte(uint8_t data, GPIO *cs)
-// {
-//   uint16_t spiTimeout;
+  // Loop while DR register is not empty
+  while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_TXE) == RESET)
+    if ((--spiTimeout) == 0) return 0x00;
 
-//   spiTimeout = 0x1000;
+  // send the byte of data
+  SPI_SendData8(SPIx_, data);
 
-//   if (cs != NULL)
-//     enable(*cs);
+  // wait to receive a byte
+  spiTimeout = 0x1000;
+  while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_RXNE) == RESET)
+    if ((--spiTimeout) == 0) return 0x00;
 
-//   while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_TXE) == RESET)
-//   {
-//     if ((--spiTimeout) == 0)
-//       return false;
-//   }
+  // We received a byte from the SPI bus
+  return SPI_ReceiveData8(SPIx_);
+}
 
-//   SPI_I2S_SendData(SPIx_, data);
-
-//   spiTimeout = 0x1000;
-
-//   while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_RXNE) == RESET)
-//   {
-//     if ((--spiTimeout) == 0)
-//       return false;
-//   }
-
-//   if (cs)
-//     disable(*cs);
-
-//   return (uint8_t)SPI_I2S_ReceiveData(SPIx_);
-// }
+// ----------------------------------------------------------------------------
 
 // bool SPI::transfer(uint8_t* out_data, uint32_t num_bytes, uint8_t* in_data, GPIO* cs, void (*cb)(void))
 // {

@@ -12,20 +12,6 @@ namespace sensors
 
   class L3GD20
   {
-  public:
-    enum class Boot_Mode: uint8_t { NORMAL = 0x00, REBOOTMEMORY = 0x80 };
-
-    enum class Power_Mode: uint8_t { POWERDOWN = 0x00, ACTIVE = 0x08 };
-    enum class Output_DataRate: uint8_t { RATE1 = 0x00, RATE2 = 0x40, RATE3 = 0x80, RATE4 = 0xC0 };
-    enum class Axes: uint8_t { X = 0x02, Y = 0x01, Z = 0x04, ENABLE = 0x07, DISABLE = 0x00 };
-    enum class Bandwidth: uint8_t { BW1 = 0x00, BW2 = 0x10, BW3 = 0x20, BW4 = 0x30 };
-    enum class BD_Update: uint8_t { CONTINUOUS = 0x00, SINGLE = 0x80 };
-    enum class Endianness: uint8_t { LSB = 0x00, MSB = 0x40 };
-    enum class FS_Selection: uint8_t { FS250 = 0x00, FS500 = 0x10, FS2000 = 0x20 };
-
-    enum class HPF_Mode: uint8_t { NORMAL_RES = 0x00, REF_SIGNAL = 0x10, NORMAL = 0x20, AUTORESET_INT = 0x30 };
-    enum class HPF_CF: uint8_t {F0=0x00,F1=0x01,F2=0x02,F3=0x03,F4=0x04,F5=0x05,F6=0x06,F7=0x07,F8=0x08,F9=0x09};
-
   private:
 
     // define the registers
@@ -56,18 +42,40 @@ namespace sensors
       INT1_TSH_TL = 0x35,
       INT1_TSH_ZH = 0x36,
       INT1_TSH_ZL = 0x37,
-      INT1_DURATION = 0x38
+      INT1_DURATION = 0x38,
+      // addr read/write config
+      READWRITE_CMD = 0x80,
+      MULTIPLEBYTE_CMD = 0x40,
+      DUMMY_BYTE = 0x00
     };
 
     // This constexpr (compile-time) function extracts the underlying
     // value of an enumeration based on its underlying type
     template<typename E>
-    constexpr auto uv(E e) -> typename std::underlying_type<E>::type 
+    static constexpr auto uv(E e) -> typename std::underlying_type<E>::type 
     {
        return static_cast<typename std::underlying_type<E>::type>(e);
     }
 
   public:
+    // CTRL_REG1 bits
+    enum class Power_Mode: uint8_t { POWERDOWN = 0x00, ACTIVE = 0x08 };
+    enum class Output_DataRate: uint8_t { RATE1 = 0x00, RATE2 = 0x40, RATE3 = 0x80, RATE4 = 0xC0 };
+    enum class Axes: uint8_t { X = 0x02, Y = 0x01, Z = 0x04, ENABLE = 0x07, DISABLE = 0x00 };
+    enum class Bandwidth: uint8_t { BW1 = 0x00, BW2 = 0x10, BW3 = 0x20, BW4 = 0x30 };
+
+    // CTRL_REG2 bits
+    enum class HPF_Mode: uint8_t { NORMAL_RES = 0x00, REF_SIGNAL = 0x10, NORMAL = 0x20, AUTORESET_INT = 0x30 };
+    enum class HPF_CF: uint8_t { F0=0x00,F1=0x01,F2=0x02,F3=0x03,F4=0x04,F5=0x05,F6=0x06,F7=0x07,F8=0x08,F9=0x09 };
+
+    // CTRL_REG4 bits
+    enum class BD_Update: uint8_t { CONTINUOUS = 0x00, SINGLE = 0x80 };
+    enum class Endianness: uint8_t { LSB = 0x00, MSB = 0x40 };
+    enum class FS_Selection: uint8_t { FS250 = 0x00, FS500 = 0x10, FS2000 = 0x20 };
+
+    // CTRL_REG5 bits
+    enum class Boot_Mode: uint8_t { NORMAL = 0x00, REBOOTMEMORY = 0x80 };
+    enum class HPF_State: uint8_t { ENABLE = 0x10, DISABLE = 0x00 };
 
     struct DeviceParams
     {
@@ -94,11 +102,14 @@ namespace sensors
       uint8_t Int_ActiveEdge;     // Interrupt on active edge
     };
 
-    void init(SPI* spi, DeviceParams* params);
+    void init(SPI* spi, GPIO* cs, DeviceParams* params);
+    void enable_hpfilter(FilterParams* params);
+    void read_rates(float& x, float& y, float& z);
 
 
   private:
     SPI* spi_;
+    GPIO* cs_;
 
     void write(RegAddr addr, uint8_t* buffer, uint16_t len);
     void read(RegAddr addr, uint8_t* buffer, uint16_t len);
