@@ -56,10 +56,13 @@ void SPI::init(SPI_TypeDef* SPIx/*, GPIO cs*/)
   SPI_InitStructure.SPI_Direction         = SPI_Direction_2Lines_FullDuplex;
   SPI_InitStructure.SPI_Mode              = SPI_Mode_Master;
   SPI_InitStructure.SPI_DataSize          = SPI_DataSize_8b;
+
+  // inactive clock is high, data is transitioned on the failing (1st) clk edge, latched on rising (2nd) clk edge
   SPI_InitStructure.SPI_CPOL              = SPI_CPOL_High;
   SPI_InitStructure.SPI_CPHA              = SPI_CPHA_2Edge;
+
   SPI_InitStructure.SPI_NSS               = SPI_NSS_Soft;
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;  // 42/64 = 0.65625 MHz SPI Clock
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;  // 72/8 = 9 MHz SPI Clock
   SPI_InitStructure.SPI_FirstBit          = SPI_FirstBit_MSB;
   SPI_InitStructure.SPI_CRCPolynomial     = 7;
   SPI_Init(SPIx_, &SPI_InitStructure);
@@ -106,7 +109,7 @@ void SPI::init(SPI_TypeDef* SPIx/*, GPIO cs*/)
 void SPI::set_divisor(uint16_t new_divisor) {
   SPI_Cmd(SPIx_, DISABLE);
 
-  const uint16_t clearBRP = 0xFFC7;
+  constexpr uint16_t clearBRP = 0xFFC7;
 
   uint16_t temp = SPIx_->CR1;
 

@@ -59,6 +59,6 @@ int main()
         static_cast<int>(gy*1000),
         static_cast<int>(gz*1000));
 
-    delay(200);
+    delay(50);
   }
 }
