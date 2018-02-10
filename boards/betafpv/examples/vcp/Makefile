@@ -92,7 +92,7 @@ OPTIMIZE = -Og
 else
 $(info ************  BUILDING RELEASE ************)
 DEBUG_FLAGS = -g0
-OPTIMIZE = -O3
+OPTIMIZE = -O2
 LTO_FLAGS = -flto -fuse-linker-plugin $(OPTIMIZE)
 endif
 

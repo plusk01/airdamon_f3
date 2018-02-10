@@ -72,6 +72,9 @@ namespace sensors
       YA_OFFSET_L = 0x7B,
       ZA_OFFSET_H = 0x7D,
       ZA_OFFSET_L = 0x7E,
+      // addr read/write config
+      READ_CMD = 0x80,
+      DUMMY_BYTE = 0x00
     };
 
     // This constexpr (compile-time) function extracts the underlying
@@ -85,10 +88,10 @@ namespace sensors
   public:
     // register bits
     enum class PWR_MGMT_1: uint8_t { DEV_RST = 0x80, SLEEP = 0x40, CLKSEL_AUTO = 0x01 };
-    enum class USER_CTRL: uint8_t { I2C_IF_DIS = 0x10 };
+    enum class USER_CTRL: uint8_t { I2C_IF_DIS = 0x10, DMP_RST = 0x08, FIFO_RST = 0x04, I2C_MST_RST = 0x02, SIG_COND_RST = 0x01 };
 
     void init(SPI* spi, GPIO* cs);
-    void read(float& x, float& y, float& z);
+    void read(float* accel, float* gyro, float* temp);
 
 
   private:
@@ -96,7 +99,7 @@ namespace sensors
     GPIO* cs_;
 
     void write(RegAddr addr, uint8_t data);
-    void read(RegAddr addr, uint8_t data);
+    void read(RegAddr addr, uint8_t* buffer, uint16_t len);
     void chip_select(bool enable);
   };
 

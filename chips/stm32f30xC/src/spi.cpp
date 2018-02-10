@@ -13,26 +13,26 @@ void SPI::init(SPI_TypeDef* SPIx/*, GPIO cs*/)
 
   if (SPIx_ == SPI1)
   {
-    // // Initialize GPIO pins for SPI1
-    // sck_.init(GPIOB, GPIO_Pin_3, GPIO::PERIPH_OUT);
-    // miso_.init(GPIOB, GPIO_Pin_4, GPIO::PERIPH_OUT);
-    // mosi_.init(GPIOB, GPIO_Pin_5, GPIO::PERIPH_OUT);
-
-    // // Set GPIO pins as alternate function
-    // GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_5);
-    // GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_5);
-    // GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_5);
-
+    // Initialize GPIO pins for SPI1
+    sck_.init(GPIOB, GPIO_Pin_3, GPIO::PERIPH_OUT);
+    miso_.init(GPIOB, GPIO_Pin_4, GPIO::PERIPH_OUT);
+    mosi_.init(GPIOB, GPIO_Pin_5, GPIO::PERIPH_OUT);
 
     // Set GPIO pins as alternate function
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_5);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_5);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_5);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_5);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_5);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_5);
 
-    // Initialize GPIO pins for SPI1
-    sck_.init(GPIOA, GPIO_Pin_5, GPIO::PERIPH_OUT);
-    miso_.init(GPIOA, GPIO_Pin_6, GPIO::PERIPH_OUT);
-    mosi_.init(GPIOA, GPIO_Pin_7, GPIO::PERIPH_OUT);
+
+    // // Set GPIO pins as alternate function
+    // GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_5);
+    // GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_5);
+    // GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_5);
+
+    // // Initialize GPIO pins for SPI1
+    // sck_.init(GPIOA, GPIO_Pin_5, GPIO::PERIPH_OUT);
+    // miso_.init(GPIOA, GPIO_Pin_6, GPIO::PERIPH_OUT);
+    // mosi_.init(GPIOA, GPIO_Pin_7, GPIO::PERIPH_OUT);
 
     // Enable clock to SPI1, an APB2 peripheral
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
