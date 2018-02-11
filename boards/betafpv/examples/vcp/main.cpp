@@ -19,15 +19,13 @@ int main()
   while(1)
   {
 
-    info.on();
-    delay(300);
-    info.off();
-    delay(300);
+    info.toggle();
 
     if (vcp.rx_bytes_waiting())
       printf("Read: %c\n", vcp.read_byte());
     else
       printf("Nothing to read! %d\n", i++);
 
+    delay(100);
   }
 }

@@ -11,7 +11,8 @@ int main()
   info.init(GPIOE, GPIO_Pin_13);
   warn.init(GPIOE, GPIO_Pin_12);
 
-  UART uart1(USART1);
+  UART uart1;
+  uart1.init(USART1);
   uart1.connect_to_printf();
 
   int i = 0;

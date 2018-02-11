@@ -114,7 +114,7 @@ void Virtual_Com_Port_init(void)
  * Output         : None.
  * Return         : None.
  *******************************************************************************/
-void Virtual_Com_Port_Reset(void)
+void __attribute__((optimize("O0"))) Virtual_Com_Port_Reset(void)
 {
     /* Set Virtual_Com_Port DEVICE as not configured */
     pInformation->Current_Configuration = 0;
