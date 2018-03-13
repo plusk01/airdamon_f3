@@ -45,6 +45,9 @@ void UART::init(USART_TypeDef* uart, uint32_t baudrate)
     Tx_DMA_Channel_ = DMA1_Channel4;
     Rx_DMA_Channel_ = DMA1_Channel5;
 
+    // USART global interrupt IRQ number
+    USARTx_IRQn_ = USART1_IRQn;
+
     // Store the pointer to this object for use in IRQ handlers
     UART1Ptr = this;
   }
@@ -71,6 +74,9 @@ void UART::init(USART_TypeDef* uart, uint32_t baudrate)
     Tx_DMA_Channel_ = DMA1_Channel7;
     Rx_DMA_Channel_ = DMA1_Channel6;
 
+    // USART global interrupt IRQ number
+    USARTx_IRQn_ = USART2_IRQn;
+
     // Store the pointer to this object for use in IRQ handlers
     UART2Ptr = this;
   }
@@ -78,6 +84,20 @@ void UART::init(USART_TypeDef* uart, uint32_t baudrate)
   init_DMA();
   init_UART(baudrate);
   init_NVIC();
+}
+
+// ----------------------------------------------------------------------------
+
+void UART::register_rx_callback(std::function<void(uint8_t)> cb)
+{
+  cb_rx_ = cb;
+}
+
+// ----------------------------------------------------------------------------
+
+void UART::unregister_rx_callback()
+{
+  cb_rx_ = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -204,6 +224,16 @@ bool UART::would_stomp_dma_data()
   return is_DMA_processing && would_stomp;
 }
 
+// ----------------------------------------------------------------------------
+
+void UART::handle_usart_irq()
+{
+  if (cb_rx_ != nullptr)
+  {
+    while (rx_bytes_waiting())
+      cb_rx_(read_byte());
+  }
+}
 
 // ----------------------------------------------------------------------------
 // Private Methods
@@ -241,8 +271,8 @@ void UART::init_DMA()
   //
 
   DMA_StructInit(&DMA_InitStructure);
-  DMA_InitStructure.DMA_PeripheralBaseAddr  = (uint32_t)(&(USARTx_->TDR));
-  DMA_InitStructure.DMA_MemoryBaseAddr      = (uint32_t)tx_buffer_;
+  DMA_InitStructure.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(USARTx_->TDR));
+  DMA_InitStructure.DMA_MemoryBaseAddr      = reinterpret_cast<uint32_t>(tx_buffer_);
   DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralDST;
   DMA_InitStructure.DMA_BufferSize          = TX_BUFFER_SIZE;
   DMA_InitStructure.DMA_PeripheralInc       = DMA_PeripheralInc_Disable;
@@ -264,8 +294,8 @@ void UART::init_DMA()
   //
 
   DMA_StructInit(&DMA_InitStructure);
-  DMA_InitStructure.DMA_PeripheralBaseAddr  = (uint32_t)(&(USARTx_->RDR));
-  DMA_InitStructure.DMA_MemoryBaseAddr      = (uint32_t)rx_buffer_;
+  DMA_InitStructure.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(USARTx_->RDR));
+  DMA_InitStructure.DMA_MemoryBaseAddr      = reinterpret_cast<uint32_t>(rx_buffer_);
   DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralSRC;
   DMA_InitStructure.DMA_BufferSize          = RX_BUFFER_SIZE;
   DMA_InitStructure.DMA_PeripheralInc       = DMA_PeripheralInc_Disable;
@@ -316,6 +346,10 @@ void UART::init_NVIC()
   NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
   NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStruct);
+
+  // USART Global Interrupt
+  NVIC_InitStruct.NVIC_IRQChannel = USARTx_IRQn_;
+  NVIC_Init(&NVIC_InitStruct);
 }
 
 
@@ -323,6 +357,14 @@ void UART::init_NVIC()
 // IRQ Handlers associated with USART and DMA
 // ----------------------------------------------------------------------------
 
+extern "C" void USART1_IRQHandler(void)
+{
+  // RDR has already been read (thus, RXNE cleared) because we are using DMA
+  // if (USART_GetITStatus(USART2, USART_IT_RXNE))
+  UART1Ptr->handle_usart_irq();
+}
+
+// ----------------------------------------------------------------------------
 
 extern "C" void DMA1_Channel4_IRQHandler(void)
 {
@@ -337,6 +379,16 @@ extern "C" void DMA1_Channel4_IRQHandler(void)
     UART1Ptr->start_DMA_transfer();
 
   DMA_ClearITPendingBit(DMA1_IT_TC4);
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+extern "C" void USART2_IRQHandler(void)
+{
+  // RDR has already been read (thus, RXNE cleared) because we are using DMA
+  // if (USART_GetITStatus(USART2, USART_IT_RXNE))
+  UART2Ptr->handle_usart_irq();
 }
 
 // ----------------------------------------------------------------------------

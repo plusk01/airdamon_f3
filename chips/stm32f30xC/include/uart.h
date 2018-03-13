@@ -13,6 +13,8 @@
 #ifndef UART_H
 #define UART_H
 
+#include <functional>
+
 #include "system.h"
 #include "gpio.h"
 
@@ -30,6 +32,10 @@ public:
 
   // Use this object for printf
   void connect_to_printf();
+
+  // Allow calling code to be sent bytes as they are received
+  void register_rx_callback(std::function<void(uint8_t)> cb);
+  void unregister_rx_callback();
 
   //
   // Rx functions
@@ -57,10 +63,16 @@ public:
   // the DMA could possibly still need for a transfer?
   bool would_stomp_dma_data();
 
+  //
+  // IRQ functions
+  //
 
   // Start a DMA transfer from buffer to Tx reg of USARTx.
   // The only reason this is public is for access from the IRQ handler.
   void start_DMA_transfer();
+
+  // The USART peripheral recieved a byte (IT_RXNE). Your move.
+  void handle_usart_irq();
 
 private:
   // Initializers for low-level perhipherals and components
@@ -86,8 +98,14 @@ private:
   // USART Tx Channel DMA IRQ number
   IRQn_Type Tx_DMA_IRQn_;
 
+  // USART global interrupt IRQ number
+  IRQn_Type USARTx_IRQn_;
+
   // The specified USART perhipheral
   USART_TypeDef* USARTx_;
+
+  // Allow calling code to be sent the byte when it is received
+  std::function<void(uint8_t)> cb_rx_ = nullptr;
 
 };
 
