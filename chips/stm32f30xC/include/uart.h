@@ -28,7 +28,9 @@ extern "C" {
 class UART
 {
 public:
-  void init(USART_TypeDef* uart, uint32_t baudrate=115200);
+  enum class Mode: uint8_t { m8N1, m8E2 };
+
+  void init(USART_TypeDef* uart, uint32_t baudrate=115200, Mode mode=Mode::m8N1);
 
   // Use this object for printf
   void connect_to_printf();
@@ -36,6 +38,9 @@ public:
   // Allow calling code to be sent bytes as they are received
   void register_rx_callback(std::function<void(uint8_t)> cb);
   void unregister_rx_callback();
+
+  // Allow changing baudrate and UART mode
+  void set_mode(uint32_t baudrate, Mode mode);
 
   //
   // Rx functions
@@ -76,7 +81,7 @@ public:
 
 private:
   // Initializers for low-level perhipherals and components
-  void init_UART(uint32_t baudrate);
+  void init_UART(uint32_t baudrate, Mode mode);
   void init_DMA();
   void init_NVIC();
 

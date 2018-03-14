@@ -18,7 +18,7 @@ static void _putc(void* p, char c)
 
 // ----------------------------------------------------------------------------
 
-void UART::init(USART_TypeDef* uart, uint32_t baudrate)
+void UART::init(USART_TypeDef* uart, uint32_t baudrate, Mode mode)
 {
   USARTx_ = uart;
 
@@ -82,7 +82,7 @@ void UART::init(USART_TypeDef* uart, uint32_t baudrate)
   }
 
   init_DMA();
-  init_UART(baudrate);
+  init_UART(baudrate, mode);
   init_NVIC();
 }
 
@@ -98,6 +98,13 @@ void UART::register_rx_callback(std::function<void(uint8_t)> cb)
 void UART::unregister_rx_callback()
 {
   cb_rx_ = nullptr;
+}
+
+// ----------------------------------------------------------------------------
+
+void UART::set_mode(uint32_t baudrate, Mode mode)
+{
+ init_UART(baudrate, mode);
 }
 
 // ----------------------------------------------------------------------------
@@ -240,21 +247,35 @@ void UART::handle_usart_irq()
 // ----------------------------------------------------------------------------
 
 
-void UART::init_UART(uint32_t baudrate)
+void UART::init_UART(uint32_t baudrate, Mode mode)
 {
-  // Configure a bi-directional, 8-N-1 UART device
+  // Configure a bi-directional, UART device
   USART_InitTypeDef USART_InitStruct;
   USART_InitStruct.USART_BaudRate             = baudrate;
-  USART_InitStruct.USART_WordLength           = USART_WordLength_8b;
-  USART_InitStruct.USART_StopBits             = USART_StopBits_1;
-  USART_InitStruct.USART_Parity               = USART_Parity_No;
   USART_InitStruct.USART_HardwareFlowControl  = USART_HardwareFlowControl_None;
   USART_InitStruct.USART_Mode                 = USART_Mode_Rx | USART_Mode_Tx;
+
+  if (mode == Mode::m8N1)
+  {
+    USART_InitStruct.USART_WordLength           = USART_WordLength_8b;
+    USART_InitStruct.USART_Parity               = USART_Parity_No;
+    USART_InitStruct.USART_StopBits             = USART_StopBits_1;
+  }
+  else if (mode == Mode::m8E2)
+  {
+    // 9 bit UART word because of the parity bit
+    USART_InitStruct.USART_WordLength           = USART_WordLength_9b;
+    USART_InitStruct.USART_Parity               = USART_Parity_Even;
+    USART_InitStruct.USART_StopBits             = USART_StopBits_2;
+  }
+
   USART_Init(USARTx_, &USART_InitStruct);
 
   // Enable interrupts on "receive buffer not empty" (i.e., byte received)
   USART_ClearITPendingBit(USARTx_, USART_IT_RXNE);
   USART_ITConfig(USARTx_, USART_IT_RXNE, ENABLE);
+
+  USART_InvPinCmd(USART2, USART_InvPin_Rx, ENABLE);
 
   // Enable the given USART perhipheral
   USART_Cmd(USARTx_, ENABLE);
