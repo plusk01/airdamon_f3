@@ -14,7 +14,8 @@ VCP_DIR       = $(CHIP_DIR)/vcp
 # Include Directories
 #################################
 
-INCLUDE_DIRS += $(CHIP_DIR)/include \
+INCLUDE_DIRS += $(CHIP_DIR) \
+				$(CHIP_DIR)/include \
                 $(LIB_DIR) \
                 $(STDPERIPH_DIR)/inc \
                 $(USBCORE_DIR)/inc \
@@ -52,9 +53,13 @@ VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
 VPATH   := $(VPATH):$(CHIP_DIR)/src
 CHIP_SRC = $(notdir $(wildcard $(CHIP_DIR)/src/*.cpp))
 
+# Search path and source files for the chip system C source
+VPATH   := $(VPATH):$(CHIP_DIR)
+SYS_SRC = $(CHIP_DIR)/system.c
+
 # Append necessary C and CXX sources for this specific chip
 ASOURCES   += $(STARTUP_SRC)
-CSOURCES   += $(STDPERIPH_SRC) $(USBCORE_SRC) $(VCP_SRC) $(PRINTF_SRC)
+CSOURCES   += $(STDPERIPH_SRC) $(USBCORE_SRC) $(VCP_SRC) $(PRINTF_SRC) $(SYS_SRC)
 CXXSOURCES += $(CHIP_SRC)
 
 #################################

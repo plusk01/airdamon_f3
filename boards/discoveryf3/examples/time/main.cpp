@@ -1,10 +1,8 @@
-#include <led.h>
-#include <vcp.h>
-
+#include <discoveryf3.h>
 
 int main()
 {
-  systemInit();
+  board_init();
 
   LED info;
   LED warn;

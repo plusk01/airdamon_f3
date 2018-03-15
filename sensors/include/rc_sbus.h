@@ -36,7 +36,7 @@
 #include "uart.h"
 #include "led.h"
 
-namespace sensors {
+namespace airdamon { namespace sensors {
 
   class RC_SBUS : public RC
   {
@@ -109,6 +109,7 @@ namespace sensors {
     void decode_buffer();
     
   };
-}
+  
+}}
 
 #endif

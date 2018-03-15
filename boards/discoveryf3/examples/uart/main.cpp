@@ -1,17 +1,16 @@
-#include <led.h>
-#include <uart.h>
+#include <discoveryf3.h>
 
 int main()
 {
-  systemInit();
+  board_init();
 
   LED info;
   LED warn;
   info.init(GPIOE, GPIO_Pin_13);
   warn.init(GPIOE, GPIO_Pin_12);
 
-  UART uart1;
-  uart1.init(USART1);
+  airdamon::UART uart1;
+  uart1.init(&uart_config[CFG_UART1]);
   uart1.connect_to_printf();
 
   int i = 0;

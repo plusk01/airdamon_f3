@@ -1,3 +1,4 @@
+#include <betafpv_f3.h>
 #include <led.h>
 #include <uart.h>
 #include <vcp.h>
@@ -10,10 +11,10 @@ int main()
   // LED info;
   // info.init(GPIOB, GPIO_Pin_8);
 
-  UART uart2;
-  uart2.init(USART2);
+  airdamon::UART uart2;
+  uart2.init(&uart_config[0]);
 
-  sensors::RC_SBUS rc;
+  airdamon::sensors::RC_SBUS rc;
   rc.init(&uart2);
 
   VCP vcp;

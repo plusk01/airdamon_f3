@@ -31,7 +31,7 @@
 
 #include "rc_sbus.h"
 
-namespace sensors {
+namespace airdamon { namespace sensors {
 
 RC_SBUS::RC_SBUS() {}
 
@@ -156,4 +156,4 @@ void RC_SBUS::decode_buffer()
 //     failsafe_status_ = SBUS_SIGNAL_FAILSAFE;
 }
 
-}
+}}

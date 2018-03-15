@@ -1,13 +1,13 @@
 #include "uart.h"
 
 // pointers to UART objects for use in IRQ handlers
-static UART* UART1Ptr = nullptr;
-static UART* UART2Ptr = nullptr;
+static airdamon::UART* UART1Ptr = nullptr;
+static airdamon::UART* UART2Ptr = nullptr;
 
 // printf function for putting a single character to screen
 static void _putc(void* p, char c)
 {
-  UART* pUART = static_cast<UART*>(p);
+  airdamon::UART* pUART = static_cast<airdamon::UART*>(p);
 
   // if the tx buffer is full, let's wait until there is some
   // more space to prevent stomping on data in the buffer.
@@ -18,71 +18,28 @@ static void _putc(void* p, char c)
 
 // ----------------------------------------------------------------------------
 
-void UART::init(USART_TypeDef* uart, uint32_t baudrate, Mode mode)
+namespace airdamon {
+
+void UART::init(const UARTConfig* config, uint32_t baudrate, Mode mode, bool inverted)
 {
-  USARTx_ = uart;
+  cfg_ = config;
 
-  if (USARTx_ == USART1)
-  {
-    // Initialize GPIO pins for USART1
-    tx_pin_.init(GPIOA, GPIO_Pin_9, GPIO::PERIPH_OUT);
-    rx_pin_.init(GPIOA, GPIO_Pin_10, GPIO::PERIPH_IN);
+  // Initialize GPIO pins for USARTx
+  rx_pin_.init(config->GPIOx, config->rx_pin, GPIO::PERIPH_IN);
+  tx_pin_.init(config->GPIOx, config->tx_pin, GPIO::PERIPH_OUT);
 
-    // Set GPIO pins as alternate function
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_7);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_7);
+  // Set GPIO pins as alternate function
+  GPIO_PinAFConfig(config->GPIOx, config->rx_pin_source, config->GPIO_AF);
+  GPIO_PinAFConfig(config->GPIOx, config->tx_pin_source, config->GPIO_AF);
 
-    // Enable clock to USART1, an APB2 peripheral
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-
-    // Enable clock to DMA1, an AHB peripheral
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-
-    Tx_DMA_IRQn_ = DMA1_Channel4_IRQn;
-
-    // Assign the appropriate DMA channels that
-    // are connected to the USART1 peripheral
-    Tx_DMA_Channel_ = DMA1_Channel4;
-    Rx_DMA_Channel_ = DMA1_Channel5;
-
-    // USART global interrupt IRQ number
-    USARTx_IRQn_ = USART1_IRQn;
-
-    // Store the pointer to this object for use in IRQ handlers
+  // Store the pointer to this object for use in IRQ handlers
+  if (cfg_->USARTx == USART1)
     UART1Ptr = this;
-  }
-  else if (USARTx_ == USART2)
-  {
-    // Initialize GPIO pins for USART2
-    tx_pin_.init(GPIOA, GPIO_Pin_14, GPIO::PERIPH_OUT);
-    rx_pin_.init(GPIOA, GPIO_Pin_15, GPIO::PERIPH_IN);
-
-    // Set GPIO pins as alternate function
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_7);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_7);
-
-    // Enable clock to USART2, an APB1 peripheral
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-
-    // Enable clock to DMA1, an AHB peripheral
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-
-    Tx_DMA_IRQn_ = DMA1_Channel7_IRQn;
-
-    // Assign the appropriate DMA channels that
-    // are connected to the USART2 peripheral
-    Tx_DMA_Channel_ = DMA1_Channel7;
-    Rx_DMA_Channel_ = DMA1_Channel6;
-
-    // USART global interrupt IRQ number
-    USARTx_IRQn_ = USART2_IRQn;
-
-    // Store the pointer to this object for use in IRQ handlers
+  else if (cfg_->USARTx == USART2)
     UART2Ptr = this;
-  }
 
   init_DMA();
-  init_UART(baudrate, mode);
+  init_UART(baudrate, mode, inverted);
   init_NVIC();
 }
 
@@ -102,9 +59,9 @@ void UART::unregister_rx_callback()
 
 // ----------------------------------------------------------------------------
 
-void UART::set_mode(uint32_t baudrate, Mode mode)
+void UART::set_mode(uint32_t baudrate, Mode mode, bool inverted)
 {
- init_UART(baudrate, mode);
+ init_UART(baudrate, mode, inverted);
 }
 
 // ----------------------------------------------------------------------------
@@ -129,7 +86,7 @@ void UART::write(uint8_t* ch, uint8_t len)
 
   // Ensure that the DMA transfer is finished (by making sure the channel
   // is disabled) before trying to initiate a new transfer
-  if (!(Tx_DMA_Channel_->CCR & DMA_CCR_EN))
+  if (!(cfg_->Tx_DMA_Channel->CCR & DMA_CCR_EN))
     start_DMA_transfer();
 }
 
@@ -138,7 +95,7 @@ void UART::write(uint8_t* ch, uint8_t len)
 void UART::start_DMA_transfer()
 {
   // Set the start of the transmission to the oldest data
-  Tx_DMA_Channel_->CMAR = reinterpret_cast<uint32_t>(&tx_buffer_[tx_buffer_tail_]);
+  cfg_->Tx_DMA_Channel->CMAR = reinterpret_cast<uint32_t>(&tx_buffer_[tx_buffer_tail_]);
 
   // save the last known DMA position (for checking data stomping)
   tx_old_DMA_pos_ = tx_buffer_tail_;
@@ -149,7 +106,7 @@ void UART::start_DMA_transfer()
   {
     // Set the length of the transmission to the data on the buffer.
     // If contiguous, this is easy.
-    DMA_SetCurrDataCounter(Tx_DMA_Channel_, tx_buffer_head_ - tx_buffer_tail_);
+    DMA_SetCurrDataCounter(cfg_->Tx_DMA_Channel, tx_buffer_head_ - tx_buffer_tail_);
 
     // This signifies that there is no new/usable data in the buffer
     tx_buffer_tail_ = tx_buffer_head_;
@@ -158,7 +115,7 @@ void UART::start_DMA_transfer()
   {
     // We will have to send the data in two groups, first the tail,
     // then the head we will do later
-    DMA_SetCurrDataCounter(Tx_DMA_Channel_, TX_BUFFER_SIZE - tx_buffer_tail_);
+    DMA_SetCurrDataCounter(cfg_->Tx_DMA_Channel, TX_BUFFER_SIZE - tx_buffer_tail_);
 
     // Set the tail to the beginning so that next time the leftover
     // data (which is now contiguous) will be sent.
@@ -167,7 +124,7 @@ void UART::start_DMA_transfer()
 
   // Start the transmission from the Tx buffer
   // to the Tx register in the USART peripheral
-  DMA_Cmd(Tx_DMA_Channel_, ENABLE);
+  DMA_Cmd(cfg_->Tx_DMA_Channel, ENABLE);
 }
 
 // ----------------------------------------------------------------------------
@@ -198,7 +155,7 @@ uint32_t UART::rx_bytes_waiting()
   uint32_t num_waiting_bytes = 0;
 
   // Get the current buffer head -- Remember, the DMA CNDTR counts down!
-  rx_buffer_head_ = DMA_GetCurrDataCounter(Rx_DMA_Channel_);
+  rx_buffer_head_ = DMA_GetCurrDataCounter(cfg_->Rx_DMA_Channel);
 
   // if pointing at the same location, there are no new bytes
   if (rx_buffer_head_ == rx_buffer_tail_)
@@ -226,7 +183,7 @@ bool UART::tx_buffer_empty()
 
 bool UART::would_stomp_dma_data()
 {
-  bool is_DMA_processing = (Tx_DMA_Channel_->CCR & DMA_CCR_EN);
+  bool is_DMA_processing = (cfg_->Tx_DMA_Channel->CCR & DMA_CCR_EN);
   bool would_stomp = (((tx_buffer_head_+1) % TX_BUFFER_SIZE) == tx_old_DMA_pos_);
   return is_DMA_processing && would_stomp;
 }
@@ -247,7 +204,7 @@ void UART::handle_usart_irq()
 // ----------------------------------------------------------------------------
 
 
-void UART::init_UART(uint32_t baudrate, Mode mode)
+void UART::init_UART(uint32_t baudrate, Mode mode, bool inverted)
 {
   // Configure a bi-directional, UART device
   USART_InitTypeDef USART_InitStruct;
@@ -269,16 +226,17 @@ void UART::init_UART(uint32_t baudrate, Mode mode)
     USART_InitStruct.USART_StopBits             = USART_StopBits_2;
   }
 
-  USART_Init(USARTx_, &USART_InitStruct);
+  USART_Init(cfg_->USARTx, &USART_InitStruct);
 
   // Enable interrupts on "receive buffer not empty" (i.e., byte received)
-  USART_ClearITPendingBit(USARTx_, USART_IT_RXNE);
-  USART_ITConfig(USARTx_, USART_IT_RXNE, ENABLE);
+  USART_ClearITPendingBit(cfg_->USARTx, USART_IT_RXNE);
+  USART_ITConfig(cfg_->USARTx, USART_IT_RXNE, ENABLE);
 
-  USART_InvPinCmd(USART2, USART_InvPin_Rx, ENABLE);
+  if (inverted)
+    USART_InvPinCmd(USART2, USART_InvPin_Rx, ENABLE);
 
   // Enable the given USART perhipheral
-  USART_Cmd(USARTx_, ENABLE);
+  USART_Cmd(cfg_->USARTx, ENABLE);
 }
 
 // ----------------------------------------------------------------------------
@@ -292,7 +250,7 @@ void UART::init_DMA()
   //
 
   DMA_StructInit(&DMA_InitStructure);
-  DMA_InitStructure.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(USARTx_->TDR));
+  DMA_InitStructure.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(cfg_->USARTx->TDR));
   DMA_InitStructure.DMA_MemoryBaseAddr      = reinterpret_cast<uint32_t>(tx_buffer_);
   DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralDST;
   DMA_InitStructure.DMA_BufferSize          = TX_BUFFER_SIZE;
@@ -306,8 +264,8 @@ void UART::init_DMA()
 
 
   // Configure the Tx DMA Channel Registers
-  DMA_DeInit(Tx_DMA_Channel_);
-  DMA_Init(Tx_DMA_Channel_, &DMA_InitStructure);
+  DMA_DeInit(cfg_->Tx_DMA_Channel);
+  DMA_Init(cfg_->Tx_DMA_Channel, &DMA_InitStructure);
 
 
   //
@@ -315,7 +273,7 @@ void UART::init_DMA()
   //
 
   DMA_StructInit(&DMA_InitStructure);
-  DMA_InitStructure.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(USARTx_->RDR));
+  DMA_InitStructure.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(cfg_->USARTx->RDR));
   DMA_InitStructure.DMA_MemoryBaseAddr      = reinterpret_cast<uint32_t>(rx_buffer_);
   DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralSRC;
   DMA_InitStructure.DMA_BufferSize          = RX_BUFFER_SIZE;
@@ -328,8 +286,8 @@ void UART::init_DMA()
   DMA_InitStructure.DMA_M2M                 = DMA_M2M_Disable;
 
   // Configure the Rx DMA Channel Registers
-  DMA_DeInit(Rx_DMA_Channel_);
-  DMA_Init(Rx_DMA_Channel_, &DMA_InitStructure);
+  DMA_DeInit(cfg_->Rx_DMA_Channel);
+  DMA_Init(cfg_->Rx_DMA_Channel, &DMA_InitStructure);
 
 
   //
@@ -337,11 +295,11 @@ void UART::init_DMA()
   //
 
   //  Hook up the DMA to the uart
-  USART_DMACmd(USARTx_, USART_DMAReq_Tx, ENABLE);
-  USART_DMACmd(USARTx_, USART_DMAReq_Rx, ENABLE);
+  USART_DMACmd(cfg_->USARTx, USART_DMAReq_Tx, ENABLE);
+  USART_DMACmd(cfg_->USARTx, USART_DMAReq_Rx, ENABLE);
 
   // Turn on the 'transfer complete' interrupt from the Tx DMA
-  DMA_ITConfig(Tx_DMA_Channel_, DMA_IT_TC, ENABLE);
+  DMA_ITConfig(cfg_->Tx_DMA_Channel, DMA_IT_TC, ENABLE);
 
   // Initialize the Rx/Tx buffers
   rx_buffer_head_ = RX_BUFFER_SIZE; // DMA counts down on receive
@@ -351,7 +309,7 @@ void UART::init_DMA()
   tx_old_DMA_pos_ = 0;
 
   // Turn on the Rx DMA, since it is in circular mode
-  DMA_Cmd(Rx_DMA_Channel_, ENABLE);
+  DMA_Cmd(cfg_->Rx_DMA_Channel, ENABLE);
 }
 
 // ----------------------------------------------------------------------------
@@ -362,16 +320,18 @@ void UART::init_NVIC()
 
   // DMA Tx Channel Interrupt
   NVIC_InitTypeDef NVIC_InitStruct;
-  NVIC_InitStruct.NVIC_IRQChannel = Tx_DMA_IRQn_;
+  NVIC_InitStruct.NVIC_IRQChannel = cfg_->Tx_DMA_IRQn;
   NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 2;
   NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
   NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStruct);
 
   // USART Global Interrupt
-  NVIC_InitStruct.NVIC_IRQChannel = USARTx_IRQn_;
+  NVIC_InitStruct.NVIC_IRQChannel = cfg_->USARTx_IRQn;
   NVIC_Init(&NVIC_InitStruct);
 }
+
+} // ns airdamon
 
 
 // ----------------------------------------------------------------------------
@@ -381,7 +341,7 @@ void UART::init_NVIC()
 extern "C" void USART1_IRQHandler(void)
 {
   // RDR has already been read (thus, RXNE cleared) because we are using DMA
-  // if (USART_GetITStatus(USART2, USART_IT_RXNE))
+  // if (USART_GetITStatus(USART1, USART_IT_RXNE))
   UART1Ptr->handle_usart_irq();
 }
 

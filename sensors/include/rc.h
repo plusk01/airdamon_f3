@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace sensors {
+namespace airdamon { namespace sensors {
 
   class RC
   {
@@ -13,6 +13,6 @@ namespace sensors {
     
   };
 
-}
+}}
 
 #endif

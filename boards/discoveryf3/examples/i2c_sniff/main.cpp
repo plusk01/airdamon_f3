@@ -1,12 +1,10 @@
-#include <led.h>
-#include <vcp.h>
-#include <i2c.h>
+#include <discoveryf3.h>
 
 #define NUM_I2C 2
 
 int main()
 {
-  systemInit();
+  board_init();
 
   LED info;
   LED warn;

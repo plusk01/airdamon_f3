@@ -1,8 +1,8 @@
-#include <led.h>
+#include <discoveryf3.h>
 
 int main()
 {
-  systemInit();
+  board_init();
 
   LED info;
   info.init(GPIOE, GPIO_Pin_13);

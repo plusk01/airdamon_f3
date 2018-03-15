@@ -66,7 +66,7 @@ CSOURCES   += $(TARGET_SRC)
 CXXSOURCES +=
 
 # Remove any sources that are not required for this application
-EXCLUDES    = system.c stm32_it.c
+EXCLUDES    = $(CHIP_DIR)/system.c stm32_it.c
 ASOURCES   := $(filter-out ${EXCLUDES}, $(ASOURCES))
 CSOURCES   := $(filter-out ${EXCLUDES}, $(CSOURCES))
 CXXSOURCES := $(filter-out ${EXCLUDES}, $(CXXSOURCES))

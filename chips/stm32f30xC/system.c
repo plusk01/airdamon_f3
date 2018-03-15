@@ -1,21 +1,4 @@
-/*
- * This file is part of Cleanflight.
- *
- * Cleanflight is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Cleanflight is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Cleanflight.  If not, see <http://www.gnu.org/licenses/>.
- */
 #include "system.h"
-
 
 // cycles per microsecond
 static uint32_t usTicks = 0;
@@ -48,31 +31,32 @@ void systemInit(void)
     SysTick_Config(SystemCoreClock / 32000 + 27);
     NVIC_SetPriority(SysTick_IRQn, 0);
 
-    //TODO: Should these be abstracted with the board-specific (ie revo_f4.h) file?
-    // RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, DISABLE);
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
-    // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
-    // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
+    // //TODO: Should these be abstracted with the board-specific (ie revo_f4.h) file?
+    // // RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, DISABLE);
+    // // RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
+    // // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
+    // // RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
 
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
-    // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
-    // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+    // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE, ENABLE);
+    // // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
+    // // RCC_AHB1PeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
+    // // RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE);
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM12, ENABLE);
+    // // RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+    // // RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE);
+    // // RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
+    // // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM12, ENABLE);
 
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    // // RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
 }
 
