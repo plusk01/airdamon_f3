@@ -1,10 +1,8 @@
-#include <led.h>
-#include <uart.h>
-#include <vcp.h>
+#include <betafpv.h>
 
 int main()
 {
-  systemInit();
+  board_init();
 
   LED info;
   info.init(GPIOB, GPIO_Pin_8);

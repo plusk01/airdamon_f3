@@ -122,19 +122,7 @@ namespace airdamon {
     GPIO rx_pin_;
     GPIO tx_pin_;
 
-    // DMA Channels regs for USART Rx and Tx
-    // DMA_Channel_TypeDef* Tx_DMA_Channel_;
-    // DMA_Channel_TypeDef* Rx_DMA_Channel_;
-
-    // USART Tx Channel DMA IRQ number
-    // IRQn_Type Tx_DMA_IRQn_;
-
-    // USART global interrupt IRQ number
-    // IRQn_Type USARTx_IRQn_;
-
-    // The specified USART perhipheral
-    // USART_TypeDef* USARTx_;
-
+    // low-level hw configuration for this UART object
     const UARTConfig* cfg_;
 
     // Allow calling code to be sent the byte when it is received

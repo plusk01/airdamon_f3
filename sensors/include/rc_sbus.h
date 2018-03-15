@@ -34,7 +34,6 @@
 
 #include "rc.h"
 #include "uart.h"
-#include "led.h"
 
 namespace airdamon { namespace sensors {
 
@@ -45,28 +44,39 @@ namespace airdamon { namespace sensors {
 
     void init(UART* uart);
 
+    // read the raw RC value of a channel
     float read(uint8_t channel) override;
+
+    // Is communication with the RC transmitter considered lost?
     bool lost() override;
 
-    LED info;
+    // How many malformed packets were received?
+    uint32_t num_errors() const { return errors_; }
 
   private:
-    UART* uart_;
+    // How many ms can there be without an RC signal before going into failsafe
+    static constexpr int ALLOWABLE_RC_DELAY_MS = 100;
 
+    // The UART that is connected to the SBUS RC RX
+    UART* uart_;
 
     uint8_t buffer_[25];  // buffer for the SBUS frame
     uint8_t prev_byte_;   // the last byte we received from the UART
-    uint8_t buffer_pos_;  //
+    uint8_t buffer_pos_;
 
-    bool frame_started_;
+    bool frame_started_;  // Have we seen an SBUS start byte?
 
-    uint32_t frame_start_ms_;
-    uint32_t errors_;
-    uint32_t raw_[18];
+    uint32_t frame_start_ms_;   // The time (in ms) of the start of the last frame
+    uint32_t errors_;           // how many garbled frames have we received?
+    uint32_t raw_[18] = { 0 };  // raw RC values to be read for each channel
 
-
+    // SBUS protocol magic bytes
     enum { END_BYTE = 0x00, START_BYTE = 0x0F };
-    enum class SBUS_Signal { OK, LOST, FAILSAFE };
+
+    // What is the state of SBUS connectivity?
+    enum class Status { OK, LOST, FAILSAFE };
+
+    Status status_;
 
     struct sbusFrame_s {
       uint8_t startByte;
@@ -105,9 +115,11 @@ namespace airdamon { namespace sensors {
 
     sbusFrame_t sbus_frame_;
 
-    void read_cb(uint8_t byte);
+    // Callback that is fired whenever there is a byte to read from the UART
+    void handle_byte_cb(uint8_t byte);
+
+    // Once a full SBUS frame is received, decode the buffer for later
     void decode_buffer();
-    
   };
   
 }}

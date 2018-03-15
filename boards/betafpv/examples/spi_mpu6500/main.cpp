@@ -1,10 +1,7 @@
 #include <cmath>
 #include <limits>
 
-#include <led.h>
-#include <vcp.h>
-#include <spi.h>
-#include <mpu6500.h>
+#include <betafpv.h>
 
 void findAxis(float* data, char* sign, char* axis)
 {
@@ -29,7 +26,7 @@ void findAxis(float* data, char* sign, char* axis)
 
 int main()
 {
-  systemInit();
+  board_init();
 
   LED info;
   info.init(GPIOB, GPIO_Pin_8);

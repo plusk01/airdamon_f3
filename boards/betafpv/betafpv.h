@@ -4,17 +4,26 @@
 
 #include "system.h"
 
+#include "led.h"
 #include "uart.h"
+#include "vcp.h"
+#include "spi.h"
+
+#include "mpu6500.h"
+#include "rc_sbus.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //                            UART Configuration                             //
 ///////////////////////////////////////////////////////////////////////////////
 
 constexpr int NUM_UARTS = 2;
+constexpr int CFG_UART1 = 0;
+constexpr int CFG_UART2 = 1;
 const airdamon::UARTConfig uart_config[NUM_UARTS] = {
   // USARTx, GPIOx, rx_pin, tx_pin, rx_pin_source, tx_pin_source, GPIO_AF, USARTx_IRQn, Tx_DMA_IRQn, Rx_DMA_Channel, Tx_DMA_Channel
   // UART1 is unused
   {USART1, GPIOA, GPIO_Pin_10, GPIO_Pin_9, GPIO_PinSource10, GPIO_PinSource9, GPIO_AF_7, USART1_IRQn, DMA1_Channel4_IRQn, DMA1_Channel5, DMA1_Channel4},
+  // UART2 is connected to the atmega 328p for RC SBUS
   {USART2, GPIOA, GPIO_Pin_15, GPIO_Pin_14, GPIO_PinSource15, GPIO_PinSource14, GPIO_AF_7, USART2_IRQn, DMA1_Channel7_IRQn, DMA1_Channel6, DMA1_Channel7}
 };
 

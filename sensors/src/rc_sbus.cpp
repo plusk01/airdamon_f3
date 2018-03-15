@@ -41,17 +41,12 @@ void RC_SBUS::init(UART* uart)
 {
   uart_ = uart;
 
-  uart_->set_mode(100000, UART::Mode::m8E2);
-  uart_->register_rx_callback(std::bind(&RC_SBUS::read_cb, this, std::placeholders::_1));
+  // SBUS is 100000 baud, 8E2, inverted
+  uart_->set_mode(100000, UART::Mode::m8E2, true);
+  uart_->register_rx_callback(std::bind(&RC_SBUS::handle_byte_cb, this, std::placeholders::_1));
 
   errors_ = 0;
   frame_started_ = false;
-
-  memset(raw_, 0, sizeof(raw_));
-
-  // USART_InvPinCmd(USART2, USART_InvPin_Rx, ENABLE);
-
-  info.init(GPIOB, GPIO_Pin_8);
 }
 
 // ----------------------------------------------------------------------------
@@ -65,14 +60,14 @@ float RC_SBUS::read(uint8_t channel)
 
 bool RC_SBUS::lost()
 {
-  return false;
+  return (millis() > frame_start_ms_ + ALLOWABLE_RC_DELAY_MS) || (status_ != Status::OK);
 }
 
 // ----------------------------------------------------------------------------
 // Private Methods
 // ----------------------------------------------------------------------------
 
-void RC_SBUS::read_cb(uint8_t byte)
+void RC_SBUS::handle_byte_cb(uint8_t byte)
 {
   // Look for the beginning of a new SBUS frame
   if (byte == START_BYTE && prev_byte_ == END_BYTE)
@@ -104,9 +99,7 @@ void RC_SBUS::read_cb(uint8_t byte)
       // begin looking for next frame
       frame_started_ = false;
     }
-    info.toggle();
   }
-
 
   prev_byte_ = byte;
 }
@@ -148,12 +141,12 @@ void RC_SBUS::decode_buffer()
   else
     raw_[17] = 172;
 
-//   // Failsafe
-//   failsafe_status_ = SBUS_SIGNAL_OK;
-// //  if (sbus_frame_.frame.flags & 0x0100)
-// //    failsafe_status_ = SBUS_SIGNAL_LOST;
-//   if (sbus_frame_.frame.flags & 0x1000)
-//     failsafe_status_ = SBUS_SIGNAL_FAILSAFE;
+  // Failsafe
+  status_ = Status::OK;
+  if (sbus_frame_.frame.flags & 0x0100)
+    status_ = Status::LOST;
+  if (sbus_frame_.frame.flags & 0x1000)
+    status_ = Status::FAILSAFE;
 }
 
 }}
