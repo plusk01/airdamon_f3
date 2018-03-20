@@ -26,7 +26,7 @@ namespace airdamon {
 
 
   struct UARTConfig {
-    // The relavant USART peripheral
+    // The relevant USART peripheral
     USART_TypeDef* USARTx;
     
     // USART GPIO port and pins for RX and TX
