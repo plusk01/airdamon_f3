@@ -5,6 +5,8 @@ void board_init(void)
   // Initialize the timing and other parts of the airdamon system
   systemInit();
 
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 

@@ -8,6 +8,7 @@
 #include "uart.h"
 #include "vcp.h"
 #include "spi.h"
+#include "pwm.h"
 
 #include "mpu6500.h"
 #include "rc_sbus.h"
@@ -25,6 +26,19 @@ const airdamon::UARTConfig uart_config[NUM_UARTS] = {
   {USART1, GPIOA, GPIO_Pin_10, GPIO_Pin_9, GPIO_PinSource10, GPIO_PinSource9, GPIO_AF_7, USART1_IRQn, DMA1_Channel4_IRQn, DMA1_Channel5, DMA1_Channel4},
   // UART2 is connected to the atmega 328p for RC SBUS
   {USART2, GPIOA, GPIO_Pin_15, GPIO_Pin_14, GPIO_PinSource15, GPIO_PinSource14, GPIO_AF_7, USART2_IRQn, DMA1_Channel7_IRQn, DMA1_Channel6, DMA1_Channel7}
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//                            PWM Configuration                              //
+///////////////////////////////////////////////////////////////////////////////
+
+constexpr int NUM_PWMS = 4;
+const airdamon::PWMConfig pwm_config[NUM_PWMS] = {
+  // TIMx, channel, GPIOx, pin, pin_source, GPIO_AF, TIMx_IRQn
+  {TIM2, TIM_Channel_1, GPIOA, GPIO_Pin_0, GPIO_PinSource0, GPIO_AF_1, TIM2_IRQn},
+  {TIM2, TIM_Channel_2, GPIOA, GPIO_Pin_1, GPIO_PinSource1, GPIO_AF_1, TIM2_IRQn},
+  {TIM2, TIM_Channel_3, GPIOA, GPIO_Pin_2, GPIO_PinSource2, GPIO_AF_1, TIM2_IRQn},
+  {TIM2, TIM_Channel_4, GPIOA, GPIO_Pin_3, GPIO_PinSource3, GPIO_AF_1, TIM2_IRQn},
 };
 
 ///
