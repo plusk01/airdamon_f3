@@ -30,10 +30,7 @@ namespace airdamon {
   class PWM
   {
   public:
-    void init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us);
-
-    void enable();
-    void disable();
+    void init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us, GPIO::gpio_write_t state = GPIO::HIGH);
 
     void write(float value);
     void write_us(uint16_t value);
@@ -41,8 +38,8 @@ namespace airdamon {
   private:
     // capture/compare register for the relevant channel of the timer
     volatile uint32_t* CCRx_;
-    uint16_t min_cyc_, max_cyc_;
-    uint32_t cycles_per_us_;
+    uint32_t period_;
+    uint32_t min_us_, max_us_;
 
     // GPIO object for the PWM pin
     GPIO pin_;
@@ -51,7 +48,7 @@ namespace airdamon {
     const PWMConfig* cfg_;
 
     // low-level peripheral initialization
-    void init_TIM(uint16_t frequency, uint32_t min_us, uint32_t max_us);
+    void init_TIM(uint16_t frequency);
   };
 
 }

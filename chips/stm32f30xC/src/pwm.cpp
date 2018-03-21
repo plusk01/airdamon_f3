@@ -2,93 +2,69 @@
 
 namespace airdamon {
 
-void PWM::init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us)
+void PWM::init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us, GPIO::gpio_write_t state)
 {
   cfg_ = config;
 
   // initialize the GPIO for the output pwm pin
   pin_.init(config->GPIOx, config->pin, GPIO::PERIPH_OUT);
+  pin_.write(state);
 
   // Set GPIO pins as alternate function
   GPIO_PinAFConfig(config->GPIOx, config->pin_source, config->GPIO_AF);
 
-  init_TIM(frequency, min_us, max_us);
-}
+  // save min and max microseconds of PWM
+  min_us_ = min_us;
+  max_us_ = max_us;
 
-// ----------------------------------------------------------------------------
-
-void PWM::enable()
-{
-
-}
-
-// ----------------------------------------------------------------------------
-
-void PWM::disable()
-{
-
+  init_TIM(frequency);
 }
 
 // ----------------------------------------------------------------------------
 
 void PWM::write(float value)
 {
-
+  *CCRx_ = min_us_ + static_cast<uint32_t>((max_us_ - min_us_) * value);
 }
 
 // ----------------------------------------------------------------------------
 
 void PWM::write_us(uint16_t value)
 {
-
+  *CCRx_ = (value - min_us_) * period_ / (max_us_ - min_us_);
 }
 
 // ----------------------------------------------------------------------------
 // Private Methods
 // ----------------------------------------------------------------------------
 
-void PWM::init_TIM(uint16_t frequency, uint32_t min_us, uint32_t max_us)
+void PWM::init_TIM(uint16_t frequency)
 {
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_OCInitTypeDef       TIM_OCInitStructure;
 
+  // calculate timer values
+  constexpr uint32_t PWM_MHZ = 24;
+  const uint32_t prescaler = SystemCoreClock / (PWM_MHZ * 1000000);
 
-
-  //calculate timer values
-  //This is dependent on how fast the SystemCoreClock is. (ie will change between stm32fX models)
-  const uint16_t prescaler_default = 42;
-  uint32_t freq_prescale = prescaler_default * 2;
-  uint32_t tim_prescaler = prescaler_default;
-
-  // if (TIMPtr == TIM9 || TIMPtr == TIM10 || TIMPtr == TIM11)
-  // {
-  //   //For F4's (possibly others) TIM9-11 have a max timer clk double that of all the other TIMs
-  //   //compensate for this by doubling its prescaler
-  //   tim_prescaler = tim_prescaler * 2;
-  // }
-  uint32_t timer_freq_hz = SystemCoreClock / freq_prescale;
-
-  cycles_per_us_ = timer_freq_hz / 1000000;//E^6
-  max_cyc_ = max_us * cycles_per_us_;
-  min_cyc_ = min_us * cycles_per_us_;
-
-
+  // how many cycles is one period at the specified PWM frequency?
+  period_ = (PWM_MHZ * 1000000) / frequency;
 
   //init timer
   TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-  TIM_TimeBaseStructure.TIM_Period        = (2000000 / frequency) - 1; // 0 indexed
-  TIM_TimeBaseStructure.TIM_Prescaler     = tim_prescaler - 1;
-  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1; //0x0000
+  TIM_TimeBaseStructure.TIM_Period        = (period_ - 1) & 0xFFFF;
+  TIM_TimeBaseStructure.TIM_Prescaler     = prescaler - 1;
+  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_CounterMode   = TIM_CounterMode_Up;
   TIM_TimeBaseInit(cfg_->TIMx, &TIM_TimeBaseStructure);
 
   //init output compare
   TIM_OCStructInit(&TIM_OCInitStructure);
-  TIM_OCInitStructure.TIM_OCMode        = TIM_OCMode_PWM2;
+  TIM_OCInitStructure.TIM_OCMode        = TIM_OCMode_PWM1;
   TIM_OCInitStructure.TIM_OutputState   = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_OutputNState  = TIM_OutputNState_Disable;
-  TIM_OCInitStructure.TIM_Pulse         = min_cyc_ - 1;
-  TIM_OCInitStructure.TIM_OCPolarity    = TIM_OCPolarity_Low;
+  // TIM_OCInitStructure.TIM_OutputNState  = TIM_OutputNState_Disable;
+  // TIM_OCInitStructure.TIM_Pulse         = min_cyc_ - 1;
+  TIM_OCInitStructure.TIM_OCPolarity    = TIM_OCPolarity_High; //TIM_OCPolarity_Low;
   TIM_OCInitStructure.TIM_OCIdleState   = TIM_OCIdleState_Set;
 
   switch (cfg_->channel)
@@ -115,6 +91,8 @@ void PWM::init_TIM(uint16_t frequency, uint32_t min_us, uint32_t max_us)
     CCRx_ = &cfg_->TIMx->CCR4;
     break;
   }
+
+  // TIM_CtrlPWMOutputs(cfg_->TIMx, ENABLE);
 
   TIM_ARRPreloadConfig(cfg_->TIMx, ENABLE);
   TIM_Cmd(cfg_->TIMx, ENABLE);
