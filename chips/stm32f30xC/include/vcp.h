@@ -39,7 +39,7 @@ public:
   //
 
   // send a byte array through the VCP peripheral
-  void write(uint8_t* c, uint8_t len);
+  void write(const uint8_t* c, uint8_t len);
 
   // Is there any data in the buffer that needs to be sent?
   bool tx_buffer_empty();

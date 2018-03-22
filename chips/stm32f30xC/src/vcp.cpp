@@ -35,14 +35,14 @@ void VCP::connect_to_printf()
 
 // ----------------------------------------------------------------------------
 
-void VCP::write(uint8_t* ch, uint8_t len)
+void VCP::write(const uint8_t* ch, uint8_t len)
 {
   if (!usbIsConnected() || !usbIsConfigured()) return;
 
   uint32_t start = millis();
   while (len > 0)
   {
-    uint32_t num_bytes_sent = CDC_Send_DATA(ch, len);
+    uint32_t num_bytes_sent = CDC_Send_DATA(const_cast<uint8_t*>(ch), len);
     len -= num_bytes_sent;
     ch += num_bytes_sent;
 
