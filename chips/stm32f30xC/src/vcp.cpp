@@ -11,7 +11,11 @@ static void _putc(void* p, char c)
 
 // ----------------------------------------------------------------------------
 
-VCP::VCP()
+VCP::VCP() {}
+
+// ----------------------------------------------------------------------------
+
+void VCP::init()
 {
   // Initialize the GPIOs for the pins
   rx_pin_.init(GPIOA, GPIO_Pin_11, GPIO::PERIPH_IN_OUT);

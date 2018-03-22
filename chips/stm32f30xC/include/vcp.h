@@ -19,6 +19,8 @@ class VCP
 public:
   VCP();
 
+  void init();
+
   // Use this object for printf
   void connect_to_printf();
 
