@@ -49,11 +49,13 @@
 #define NULL ((void *)0)
 #endif
 
+#ifndef __cplusplus
 typedef enum
 {
   FALSE = 0, TRUE  = !FALSE
 }
 bool;
+#endif
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
