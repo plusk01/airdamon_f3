@@ -15,10 +15,10 @@ int main()
   // vcp.connect_to_printf();
 
   airdamon::PWM m1, m2, m3, m4;
-  m1.init(&pwm_config[0], 480, 1000, 2000);
-  m2.init(&pwm_config[1], 480, 1000, 2000);
-  m3.init(&pwm_config[2], 480, 1000, 2000);
-  m4.init(&pwm_config[3], 480, 1000, 2000);
+  m1.init(&pwm_config[0], 16000, 1000, 2000);
+  m2.init(&pwm_config[1], 16000, 1000, 2000);
+  m3.init(&pwm_config[2], 16000, 1000, 2000);
+  m4.init(&pwm_config[3], 16000, 1000, 2000);
 
   m1.write_us(1000);
   m2.write_us(1000);
