@@ -21,5 +21,14 @@ const airdamon::UARTConfig uart_config[NUM_UARTS] = {
   {USART1, GPIOA, GPIO_Pin_10, GPIO_Pin_9, GPIO_PinSource10, GPIO_PinSource9, GPIO_AF_7, USART1_IRQn, DMA1_Channel4_IRQn, DMA1_Channel5, DMA1_Channel4}
 };
 
+///////////////////////////////////////////////////////////////////////////////
+//                            SPI Configuration                              //
+///////////////////////////////////////////////////////////////////////////////
+
+constexpr int NUM_SPIS = 1;
+const airdamon::SPIConfig spi_config[NUM_SPIS] = {
+  // SPIx, GPIOx, sck_pin, miso_pin, mosi_pin, sck_pin_source, miso_pin_source, mosi_pin_source, GPIO_AF
+  {SPI1, GPIOA, GPIO_Pin_5, GPIO_Pin_6, GPIO_Pin_7, GPIO_PinSource5, GPIO_PinSource6, GPIO_PinSource7, GPIO_AF_5},
+};
 
 #endif // DISCOVERYF3_H

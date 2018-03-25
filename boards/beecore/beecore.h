@@ -26,6 +26,17 @@ const airdamon::UARTConfig uart_config[NUM_UARTS] = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+//                            SPI Configuration                              //
+///////////////////////////////////////////////////////////////////////////////
+
+constexpr int NUM_SPIS = 1;
+constexpr int CFG_SPI1 = 0;
+const airdamon::SPIConfig spi_config[NUM_SPIS] = {
+  // SPIx, GPIOx, sck_pin, miso_pin, mosi_pin, sck_pin_source, miso_pin_source, mosi_pin_source, GPIO_AF, Tx_DMA_IRQn, Rx_DMA_Channel, Tx_DMA_Channel
+  {SPI1, GPIOB, GPIO_Pin_3, GPIO_Pin_4, GPIO_Pin_5, GPIO_PinSource3, GPIO_PinSource4, GPIO_PinSource5, GPIO_AF_5, DMA1_Channel3_IRQn, DMA1_Channel2, DMA1_Channel3},
+};
+
+///////////////////////////////////////////////////////////////////////////////
 //                            PWM Configuration                              //
 ///////////////////////////////////////////////////////////////////////////////
 

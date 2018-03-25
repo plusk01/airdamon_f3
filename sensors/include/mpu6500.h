@@ -7,8 +7,7 @@
 #include "spi.h"
 #include "gpio.h"
 
-namespace sensors
-{
+namespace airdamon { namespace sensors {
 
   class MPU6500
   {
@@ -103,6 +102,6 @@ namespace sensors
     void chip_select(bool enable);
   };
 
-}
+}}
 
 #endif // MPU6500_H

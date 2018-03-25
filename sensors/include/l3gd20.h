@@ -102,13 +102,13 @@ namespace sensors
       uint8_t Int_ActiveEdge;     // Interrupt on active edge
     };
 
-    void init(SPI* spi, GPIO* cs, DeviceParams* params);
+    void init(airdamon::SPI* spi, GPIO* cs, DeviceParams* params);
     void enable_hpfilter(FilterParams* params);
     void read_rates(float& x, float& y, float& z);
 
 
   private:
-    SPI* spi_;
+    airdamon::SPI* spi_;
     GPIO* cs_;
 
     void write(RegAddr addr, uint8_t* buffer, uint16_t len);

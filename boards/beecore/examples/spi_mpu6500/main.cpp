@@ -40,12 +40,12 @@ int main()
 
   printf("\n**** SPI IMU MPU6500 ****\n\n");
 
-  SPI spi1;
+  airdamon::SPI spi1;
   GPIO cs;
-  sensors::MPU6500 imu;
+  airdamon::sensors::MPU6500 imu;
 
   info.on();
-  spi1.init(SPI1);
+  spi1.init(&spi_config[CFG_SPI1]);
   cs.init(GPIOB, GPIO_Pin_9, GPIO::OUTPUT);
   imu.init(&spi1, &cs);
   info.off();

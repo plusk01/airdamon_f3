@@ -1,6 +1,6 @@
 #include "mpu6500.h"
 
-namespace sensors {
+namespace airdamon { namespace sensors {
 
   void MPU6500::init(SPI* spi, GPIO* cs)
   {
@@ -134,5 +134,4 @@ namespace sensors {
       cs_->write(GPIO::HIGH);
   }
 
-  // --------------------------------------------------------------------------
-}
+}}

@@ -1,6 +1,8 @@
 #ifndef SPI_H
 #define SPI_H
 
+#include <functional>
+
 #include "system.h"
 #include "gpio.h"
 
@@ -8,30 +10,70 @@ extern "C" {
 #include "printf.h"
 }
 
-class SPI
-{
-public:
+namespace airdamon {
 
-  void init(SPI_TypeDef* SPIx);
-  void set_divisor(uint16_t new_divisor);
+  struct SPIConfig {
+    // The relevant SPI peripheral
+    SPI_TypeDef* SPIx;
+    
+    // USART GPIO port and SPI pins
+    GPIO_TypeDef* GPIOx;
+    uint16_t sck_pin, miso_pin, mosi_pin;
 
-  bool transfer(uint8_t *out_data, uint32_t num_bytes, uint8_t* in_data, void (*cb)(void) = NULL);
-  uint8_t transfer_byte(uint8_t data);
+    // SPI alternate function (AF) and pins
+    uint8_t sck_pin_source, miso_pin_source, mosi_pin_source, GPIO_AF;
 
-  void transfer_complete_cb();
-  inline bool is_busy() {return busy_;}
+    // SPI Tx Channel DMA IRQ number
+    IRQn_Type Tx_DMA_IRQn;
 
-private:
-  SPI_TypeDef* SPIx_;
-  GPIO sck_;
-  GPIO mosi_;
-  GPIO miso_;
+    // DMA Channels regs for SPI Rx and Tx
+    DMA_Channel_TypeDef* Rx_DMA_Channel;
+    DMA_Channel_TypeDef* Tx_DMA_Channel;
+  };
 
-  DMA_InitTypeDef DMA_InitStructure_;
+  class SPI
+  {
+  public:
+    void init(const SPIConfig* config);
 
-  uint32_t errors_ = 0;
-  bool busy_ = false;
-  void (*transfer_cb_)(void) = NULL;
-};
+    // set the speed of the SPI peripheral
+    void set_divisor(uint16_t new_divisor);
+
+    // transfer a single byte (blocking call)
+    uint8_t transfer_byte(uint8_t data);
+
+    // transfer an array of bytes using DMA (asynchronous call). Can be made synchronous
+    // by waiting for SPi to not be busy: while (spi->is_busy());
+    void transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::function<void(void)> cb);
+
+    // is there a DMA (asynchronous) transfer happening?
+    bool is_busy() const { return busy_; }
+
+    // public so that ISR can call
+    void transfer_complete_isr();
+
+  private:
+    SPI_TypeDef* SPIx_;
+    GPIO sck_;
+    GPIO mosi_;
+    GPIO miso_;
+
+    DMA_InitTypeDef DMA_InitStructure_;
+
+    uint32_t errors_ = 0;
+    bool busy_ = false;
+
+    // callback once DMA transfer is complete
+    std::function<void(void)> cb_;
+
+    // low-level hw configuration for this SPI object
+    const SPIConfig* cfg_;
+
+    void init_DMA();
+    void init_SPI();
+    void init_NVIC();
+  };
+
+}
 
 #endif // SPI_H

@@ -1,117 +1,47 @@
 #include "spi.h"
 
-static SPI* SPI1ptr = nullptr;
-static SPI* SPI2ptr = nullptr;
-static SPI* SPI3ptr = nullptr;
+static airdamon::SPI* SPI1ptr = nullptr;
+static airdamon::SPI* SPI2ptr = nullptr;
+static airdamon::SPI* SPI3ptr = nullptr;
+
+namespace airdamon {
 
 static uint8_t dummy_buffer[256];
 
-void SPI::init(SPI_TypeDef* SPIx/*, GPIO cs*/)
+void SPI::init(const SPIConfig* config)
 {
-  SPIx_ = SPIx;
-  // cs_ = cs;
+  cfg_ = config;
 
-  if (SPIx_ == SPI1)
-  {
-    // Initialize GPIO pins for SPI1
-    sck_.init(GPIOB, GPIO_Pin_3, GPIO::PERIPH_OUT);
-    miso_.init(GPIOB, GPIO_Pin_4, GPIO::PERIPH_OUT);
-    mosi_.init(GPIOB, GPIO_Pin_5, GPIO::PERIPH_OUT);
+  // Initialize GPIO pins for the requested SPI peripheral
+  sck_.init(cfg_->GPIOx, cfg_->sck_pin, GPIO::PERIPH_OUT);
+  miso_.init(cfg_->GPIOx, cfg_->miso_pin, GPIO::PERIPH_OUT);
+  mosi_.init(cfg_->GPIOx, cfg_->mosi_pin, GPIO::PERIPH_OUT);
 
-    // Set GPIO pins as alternate function
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_5);
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_5);
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_5);
+  // Set GPIO pins as alternate function
+  GPIO_PinAFConfig(cfg_->GPIOx, cfg_->sck_pin_source, cfg_->GPIO_AF);
+  GPIO_PinAFConfig(cfg_->GPIOx, cfg_->miso_pin_source, cfg_->GPIO_AF);
+  GPIO_PinAFConfig(cfg_->GPIOx, cfg_->mosi_pin_source, cfg_->GPIO_AF);
 
-
-    // // Set GPIO pins as alternate function
-    // GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_5);
-    // GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_5);
-    // GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_5);
-
-    // // Initialize GPIO pins for SPI1
-    // sck_.init(GPIOA, GPIO_Pin_5, GPIO::PERIPH_OUT);
-    // miso_.init(GPIOA, GPIO_Pin_6, GPIO::PERIPH_OUT);
-    // mosi_.init(GPIOA, GPIO_Pin_7, GPIO::PERIPH_OUT);
-
-    // Enable clock to SPI1, an APB2 peripheral
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
-
+  if (cfg_->SPIx == SPI1)
     SPI1ptr = this;
-  }
-  else if (SPIx_ == SPI2)
-  {
+  else if (cfg_->SPIx == SPI2)
     SPI2ptr = this;
-  }
-  else if (SPIx_ == SPI3)
-  {
+  else if (cfg_->SPIx == SPI3)
     SPI3ptr = this;
-  }
 
-  SPI_InitTypeDef SPI_InitStructure;
-
-
-  // Set up the SPI peripheral
-  SPI_I2S_DeInit(SPIx_);
-  SPI_InitStructure.SPI_Direction         = SPI_Direction_2Lines_FullDuplex;
-  SPI_InitStructure.SPI_Mode              = SPI_Mode_Master;
-  SPI_InitStructure.SPI_DataSize          = SPI_DataSize_8b;
-
-  // inactive clock is high, data is transitioned on the failing (1st) clk edge, latched on rising (2nd) clk edge
-  SPI_InitStructure.SPI_CPOL              = SPI_CPOL_High;
-  SPI_InitStructure.SPI_CPHA              = SPI_CPHA_2Edge;
-
-  SPI_InitStructure.SPI_NSS               = SPI_NSS_Soft;
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;  // 72/8 = 9 MHz SPI Clock
-  SPI_InitStructure.SPI_FirstBit          = SPI_FirstBit_MSB;
-  SPI_InitStructure.SPI_CRCPolynomial     = 7;
-  SPI_Init(SPIx_, &SPI_InitStructure);
-
-  // SPI will generate RXNE event when Rx FIFO is a Quarter Full (QF)
-  SPI_RxFIFOThresholdConfig(SPIx_, SPI_RxFIFOThreshold_QF);
-
-  // SPI_CalculateCRC(SPIx_, DISABLE);
-  
-  SPI_Cmd(SPIx_, ENABLE);
-
-  // // Wait for any transfers to clear (this should be really short if at all)
-  // while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_TXE) == RESET);
-  // SPI_I2S_ReceiveData(SPIx_); //dummy read if needed
-
-  // // Configure the DMA
-  // DMA_InitStructure_.DMA_FIFOMode = DMA_FIFOMode_Disable ;
-  // DMA_InitStructure_.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull ;
-  // DMA_InitStructure_.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
-  // DMA_InitStructure_.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  // DMA_InitStructure_.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  // DMA_InitStructure_.DMA_Mode = DMA_Mode_Normal;
-  // DMA_InitStructure_.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-  // DMA_InitStructure_.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-  // DMA_InitStructure_.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  // DMA_InitStructure_.DMA_Channel = c_->DMA_Channel;
-  // DMA_InitStructure_.DMA_PeripheralBaseAddr = (uint32_t)(&(SPIx_->DR));
-  // DMA_InitStructure_.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  // DMA_InitStructure_.DMA_Priority = DMA_Priority_High;
-
-  // // Configure the Appropriate Interrupt Routine
-  // NVIC_InitTypeDef NVIC_InitStruct;
-  // NVIC_InitStruct.NVIC_IRQChannel = c_->DMA_IRQn;
-  // NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-  // NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x02;
-  // NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x02;
-  // NVIC_Init(&NVIC_InitStruct);
-
-  transfer_cb_ = nullptr;
+  init_DMA();
+  init_SPI();
+  init_NVIC();
 }
 
 // ----------------------------------------------------------------------------
 
 void SPI::set_divisor(uint16_t new_divisor) {
-  SPI_Cmd(SPIx_, DISABLE);
+  SPI_Cmd(cfg_->SPIx, DISABLE);
 
   constexpr uint16_t clearBRP = 0xFFC7;
 
-  uint16_t temp = SPIx_->CR1;
+  uint16_t temp = cfg_->SPIx->CR1;
 
   temp &= clearBRP;
   switch(new_divisor) {
@@ -140,8 +70,8 @@ void SPI::set_divisor(uint16_t new_divisor) {
     temp |= SPI_BaudRatePrescaler_256;
     break;
   }
-  SPIx_->CR1 = temp;
-  SPI_Cmd(SPIx_, ENABLE);
+  cfg_->SPIx->CR1 = temp;
+  SPI_Cmd(cfg_->SPIx, ENABLE);
 }
 
 // ----------------------------------------------------------------------------
@@ -151,137 +81,173 @@ uint8_t SPI::transfer_byte(uint8_t data)
   uint16_t spiTimeout = 0x1000;
 
   // Loop while DR register is not empty
-  while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_TXE) == RESET)
+  while (SPI_I2S_GetFlagStatus(cfg_->SPIx, SPI_I2S_FLAG_TXE) == RESET)
     if ((--spiTimeout) == 0) return 0x00;
 
   // send the byte of data
-  SPI_SendData8(SPIx_, data);
+  SPI_SendData8(cfg_->SPIx, data);
 
   // wait to receive a byte
   spiTimeout = 0x1000;
-  while (SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_RXNE) == RESET)
+  while (SPI_I2S_GetFlagStatus(cfg_->SPIx, SPI_I2S_FLAG_RXNE) == RESET)
     if ((--spiTimeout) == 0) return 0x00;
 
   // We received a byte from the SPI bus
-  return SPI_ReceiveData8(SPIx_);
+  return SPI_ReceiveData8(cfg_->SPIx);
 }
 
 // ----------------------------------------------------------------------------
 
-// bool SPI::transfer(uint8_t* out_data, uint32_t num_bytes, uint8_t* in_data, GPIO* cs, void (*cb)(void))
-// {
-//   busy_ = true;
+void SPI::transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::function<void(void)> cb)
+{
+  // use DMA to transmit an array of bytes
+  busy_ = true;
 
-//   // Point null arrays to dummy buffer so we have something to point to
-//   if (out_data == NULL)
-//     out_data = dummy_buffer;
-//   if (in_data == NULL)
-//     in_data = dummy_buffer;
+  // Point null arrays to dummy buffer so we have something to point to
+  if (tx_data == nullptr)
+    tx_data = dummy_buffer;
+  if (rx_data == nullptr)
+    rx_data = dummy_buffer;
 
-//   // Connect with transfer callback
-//   if (cb)
-//     transfer_cb_ = cb;
-//   else
-//     transfer_cb_ = NULL;
+  // Connect with transfer callback
+  if (cb)
+    cb_ = cb;
+  else
+    cb_ = nullptr;
 
-//   // Configure the DMA
-//   DMA_DeInit(c_->Tx_DMA_Stream); //SPI1_TX_DMA_STREAM
-//   DMA_DeInit(c_->Rx_DMA_Stream); //SPI1_RX_DMA_STREAM
+  // Configure the DMA
+  DMA_DeInit(cfg_->Tx_DMA_Channel);
+  DMA_DeInit(cfg_->Rx_DMA_Channel);
 
-//   DMA_InitStructure_.DMA_BufferSize = num_bytes;
+  // let the DMA know how many bytes are to be transfered for Rx and Tx
+  DMA_InitStructure_.DMA_BufferSize = num_bytes;
 
-//   // Configure Tx DMA
-//   DMA_InitStructure_.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-//   DMA_InitStructure_.DMA_Memory0BaseAddr = (uint32_t) out_data;
-//   DMA_Init(c_->Tx_DMA_Stream, &DMA_InitStructure_);
+  // Configure Tx DMA
+  DMA_InitStructure_.DMA_DIR = DMA_DIR_PeripheralDST;
+  DMA_InitStructure_.DMA_MemoryBaseAddr = reinterpret_cast<uint32_t>(tx_data);
+  DMA_Init(cfg_->Tx_DMA_Channel, &DMA_InitStructure_);
 
-//   // Configure Rx DMA
-//   DMA_InitStructure_.DMA_DIR = DMA_DIR_PeripheralToMemory;
-//   DMA_InitStructure_.DMA_Memory0BaseAddr = (uint32_t) in_data;
-//   DMA_Init(c_->Rx_DMA_Stream, &DMA_InitStructure_);
+  // Configure Rx DMA
+  DMA_InitStructure_.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure_.DMA_MemoryBaseAddr = reinterpret_cast<uint32_t>(rx_data);
+  DMA_Init(cfg_->Rx_DMA_Channel, &DMA_InitStructure_);
 
-//   //  Configure the Interrupt
-//   DMA_ITConfig(c_->Tx_DMA_Stream, DMA_IT_TC, ENABLE);
+  //  Configure the "transfer complete" interrupt
+  DMA_ITConfig(cfg_->Tx_DMA_Channel, DMA_IT_TC, ENABLE);
 
-//   if (cs != NULL)
-//   {
-//     enable(*cs);
-//     cs_ = cs;
-//   }
-//   else
-//     cs_ = NULL;
+  // Turn on the DMA streams
+  DMA_Cmd(cfg_->Tx_DMA_Channel, ENABLE);
+  DMA_Cmd(cfg_->Rx_DMA_Channel, ENABLE);
 
-//   // Turn on the DMA streams
-//   DMA_Cmd(c_->Tx_DMA_Stream, ENABLE);
-//   DMA_Cmd(c_->Rx_DMA_Stream, ENABLE);
+  // // Enable the SPI Rx/Tx DMA request
+  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
+  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
+}
 
-//   // Enable the SPI Rx/Tx DMA request
-//   SPI_I2S_DMACmd(SPIx_, SPI_I2S_DMAReq_Rx, ENABLE);
-//   SPI_I2S_DMACmd(SPIx_, SPI_I2S_DMAReq_Tx, ENABLE);
+// ----------------------------------------------------------------------------
 
-// }
+void SPI::transfer_complete_isr()
+{
+  // Disable the DMA transfer and wait for the next transfer to be requested.
+  DMA_Cmd(cfg_->Tx_DMA_Channel, DISABLE);
+  DMA_Cmd(cfg_->Rx_DMA_Channel, DISABLE);
 
+  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, DISABLE);
+  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, DISABLE);
 
+  // there is no longer a DMA transfer happening
+  busy_ = false;
 
-// void SPI::transfer_complete_cb()
-// {
-// //  uint8_t rxne, txe;
-// //  do
-// //  {
-// //    rxne = SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_RXNE);
-// //    txe =  SPI_I2S_GetFlagStatus(SPIx_, SPI_I2S_FLAG_TXE);
-// //  }while (rxne == RESET || txe == RESET);
+  // if the caller asked for it, let them know that the DMA transfer is complete
+  if (cb_ != nullptr) cb_();
+}
 
-//   disable(*cs_);
-//   DMA_ClearFlag(c_->Tx_DMA_Stream, c_->Tx_DMA_TCIF);
-//   DMA_ClearFlag(c_->Rx_DMA_Stream, c_->Rx_DMA_TCIF);
+// ----------------------------------------------------------------------------
+// Private Methods
+// ----------------------------------------------------------------------------
 
-//   DMA_Cmd(c_->Tx_DMA_Stream, DISABLE);
-//   DMA_Cmd(c_->Rx_DMA_Stream, DISABLE);
+void SPI::init_DMA()
+{
 
-//   SPI_I2S_DMACmd(SPIx_, SPI_I2S_DMAReq_Rx, DISABLE);
-//   SPI_I2S_DMACmd(SPIx_, SPI_I2S_DMAReq_Tx, DISABLE);
+  // initialize the DMA struct, but don't initialize the peripheral.
+  // The peripheral will be fully initialized and started when a transfer
+  // is requested.
 
-// //  SPI_Cmd(SPIx_, DISABLE);
+  DMA_StructInit(&DMA_InitStructure_);
+  DMA_InitStructure_.DMA_PeripheralBaseAddr  = reinterpret_cast<uint32_t>(&(cfg_->SPIx->DR));
+  // DMA_InitStructure_.DMA_MemoryBaseAddr      = < will be set for each SPI::transfer() >
+  // DMA_InitStructure_.DMA_DIR                 = < will be set for each SPI::transfer() >
+  // DMA_InitStructure_.DMA_BufferSize          = < will be set for each SPI::transfer() >
+  DMA_InitStructure_.DMA_PeripheralInc       = DMA_PeripheralInc_Disable;
+  DMA_InitStructure_.DMA_MemoryInc           = DMA_MemoryInc_Enable;
+  DMA_InitStructure_.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_Byte;
+  DMA_InitStructure_.DMA_MemoryDataSize      = DMA_MemoryDataSize_Byte;
+  DMA_InitStructure_.DMA_Mode                = DMA_Mode_Normal;
+  DMA_InitStructure_.DMA_Priority            = DMA_Priority_High;
+  DMA_InitStructure_.DMA_M2M                 = DMA_M2M_Disable;
 
-//   if (cs_ != NULL)
-//   {
-//     disable(*cs_);
-//   }
+  // Hookup the SPI Rx/Tx and the DMA
+  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
+  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
+}
 
-//   busy_ = false;
-//   if (transfer_cb_ != NULL)
-//     transfer_cb_();
-// }
+// ----------------------------------------------------------------------------
 
-// extern "C"
-// {
+void SPI::init_SPI()
+{
+  SPI_InitTypeDef SPI_InitStructure;
 
-// void DMA2_Stream3_IRQHandler()
-// {
-//   if (DMA_GetITStatus(DMA2_Stream3, DMA_IT_TCIF3))
-//   {
-//     DMA_ClearITPendingBit(DMA2_Stream3, DMA_IT_TCIF3);
-//     SPI1ptr->transfer_complete_cb();
-//   }
-// }
+  // Set up the SPI peripheral
+  SPI_I2S_DeInit(cfg_->SPIx);
+  SPI_InitStructure.SPI_Direction         = SPI_Direction_2Lines_FullDuplex;
+  SPI_InitStructure.SPI_Mode              = SPI_Mode_Master;
+  SPI_InitStructure.SPI_DataSize          = SPI_DataSize_8b;
 
-// void DMA1_Stream4_IRQHandler()
-// {
-//   if (DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4))
-//   {
-//     DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
-//     SPI2ptr->transfer_complete_cb();
-//   }
-// }
+  // inactive clock is high, data is transitioned on the failing (1st) clk edge, latched on rising (2nd) clk edge
+  SPI_InitStructure.SPI_CPOL              = SPI_CPOL_High;
+  SPI_InitStructure.SPI_CPHA              = SPI_CPHA_2Edge;
 
-// void DMA1_Stream5_IRQHandler()
-// {
-//   if (DMA_GetITStatus(DMA1_Stream5, DMA_IT_TCIF5))
-//   {
-//     DMA_ClearITPendingBit(DMA1_Stream5, DMA_IT_TCIF5);
-//     SPI3ptr->transfer_complete_cb();
-//   }
-// }
+  SPI_InitStructure.SPI_NSS               = SPI_NSS_Soft;
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;  // 72/8 = 9 MHz SPI Clock (SystemCoreClock == 72)
+  SPI_InitStructure.SPI_FirstBit          = SPI_FirstBit_MSB;
+  SPI_InitStructure.SPI_CRCPolynomial     = 7;
+  SPI_Init(cfg_->SPIx, &SPI_InitStructure);
 
-// }
+  // SPI will generate RXNE event when Rx FIFO is a Quarter Full (QF)
+  SPI_RxFIFOThresholdConfig(cfg_->SPIx, SPI_RxFIFOThreshold_QF);
+
+  // SPI_CalculateCRC(cfg_->SPIx, DISABLE);
+  
+  SPI_Cmd(cfg_->SPIx, ENABLE);
+}
+
+// ----------------------------------------------------------------------------
+
+void SPI::init_NVIC()
+{
+  // Configure the appropriate interrupt routine
+  NVIC_InitTypeDef NVIC_InitStruct;
+  NVIC_InitStruct.NVIC_IRQChannel = cfg_->Tx_DMA_IRQn;
+  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x02;
+  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x02;
+  NVIC_Init(&NVIC_InitStruct);
+}
+
+} // ns airdamon
+
+// ----------------------------------------------------------------------------
+// IRQ Handlers associated with SPI and DMA
+// ----------------------------------------------------------------------------
+
+extern "C" void DMA1_Channel3_IRQHandler()
+{
+  if (DMA_GetITStatus(DMA1_IT_TC3))
+  {
+    DMA_ClearITPendingBit(DMA1_IT_TC3);
+    SPI1ptr->transfer_complete_isr();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 namespace sensors {
 
-void L3GD20::init(SPI* spi, GPIO* cs, DeviceParams* params)
+void L3GD20::init(airdamon::SPI* spi, GPIO* cs, DeviceParams* params)
 {
   spi_ = spi;
   cs_ = cs;
