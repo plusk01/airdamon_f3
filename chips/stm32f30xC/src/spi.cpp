@@ -139,9 +139,9 @@ void SPI::transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::
   DMA_Cmd(cfg_->Tx_DMA_Channel, ENABLE);
   DMA_Cmd(cfg_->Rx_DMA_Channel, ENABLE);
 
-  // // Enable the SPI Rx/Tx DMA request
-  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
-  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
+  // Enable the SPI Rx/Tx DMA request
+  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
+  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
 }
 
 // ----------------------------------------------------------------------------
@@ -152,14 +152,14 @@ void SPI::transfer_complete_isr()
   DMA_Cmd(cfg_->Tx_DMA_Channel, DISABLE);
   DMA_Cmd(cfg_->Rx_DMA_Channel, DISABLE);
 
-  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, DISABLE);
-  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, DISABLE);
+  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, DISABLE);
+  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, DISABLE);
 
   // there is no longer a DMA transfer happening
   busy_ = false;
 
   // if the caller asked for it, let them know that the DMA transfer is complete
-  if (cb_ != nullptr) cb_();
+  if (cb_) cb_();
 }
 
 // ----------------------------------------------------------------------------
@@ -168,6 +168,10 @@ void SPI::transfer_complete_isr()
 
 void SPI::init_DMA()
 {
+
+  // Wait for any transfers to clear (this should be really short if at all)
+  while (SPI_I2S_GetFlagStatus(cfg_->SPIx, SPI_I2S_FLAG_TXE) == RESET);
+  SPI_ReceiveData8(cfg_->SPIx); // dummy read if needed
 
   // initialize the DMA struct, but don't initialize the peripheral.
   // The peripheral will be fully initialized and started when a transfer
@@ -186,9 +190,9 @@ void SPI::init_DMA()
   DMA_InitStructure_.DMA_Priority            = DMA_Priority_High;
   DMA_InitStructure_.DMA_M2M                 = DMA_M2M_Disable;
 
-  // Hookup the SPI Rx/Tx and the DMA
-  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
-  SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
+  // // Hookup the SPI Rx/Tx and the DMA
+  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
+  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
 }
 
 // ----------------------------------------------------------------------------

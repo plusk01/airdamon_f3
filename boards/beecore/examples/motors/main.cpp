@@ -12,6 +12,7 @@ int main()
   uart1.connect_to_printf();
 
   VCP vcp;
+  vcp.init();
   // vcp.connect_to_printf();
 
   airdamon::PWM m1, m2, m3, m4;

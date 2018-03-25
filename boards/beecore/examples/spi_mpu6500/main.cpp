@@ -36,6 +36,7 @@ int main()
   uart1.connect_to_printf();
 
   VCP vcp;
+  vcp.init();
   // vcp.connect_to_printf();
 
   printf("\n**** SPI IMU MPU6500 ****\n\n");

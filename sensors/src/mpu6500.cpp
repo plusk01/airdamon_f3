@@ -98,16 +98,25 @@ namespace airdamon { namespace sensors {
     // signal beginning of transmission to the MPU6500 device
     chip_select(true);
 
-    // send address of register to write to
-    spi_->transfer_byte(read_addr);
+    // // send address of register to write to
+    // spi_->transfer_byte(read_addr);
 
-    // Send the data to device (MSB first)
-    while (len > 0)
-    {
-      *buffer = spi_->transfer_byte(uv(RegAddr::DUMMY_BYTE));
-      len--;
-      buffer++;
-    }
+    // // Send the data to device (MSB first)
+    // while (len > 0)
+    // {
+    //   *buffer = spi_->transfer_byte(uv(RegAddr::DUMMY_BYTE));
+    //   len--;
+    //   buffer++;
+    // }
+
+    uint8_t out[15] = { 0 };
+    uint8_t in[15] = { 0 };
+
+    out[0] = read_addr;
+    spi_->transfer(out, 2, in, nullptr);
+    while (spi_->is_busy());
+    for (int i=0; i<14; i++)
+      buffer[i] = in[i+1];
 
     // signal end of transmission to the MPU6500 device
     chip_select(false);
