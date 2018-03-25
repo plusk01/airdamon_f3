@@ -23,8 +23,8 @@ namespace airdamon {
     // SPI alternate function (AF) and pins
     uint8_t sck_pin_source, miso_pin_source, mosi_pin_source, GPIO_AF;
 
-    // SPI Tx Channel DMA IRQ number
-    IRQn_Type Tx_DMA_IRQn;
+    // SPI Rx Channel DMA IRQ number
+    IRQn_Type Rx_DMA_IRQn;
 
     // DMA Channels regs for SPI Rx and Tx
     DMA_Channel_TypeDef* Rx_DMA_Channel;

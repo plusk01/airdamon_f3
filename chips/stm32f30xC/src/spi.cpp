@@ -132,8 +132,8 @@ void SPI::transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::
   DMA_InitStructure_.DMA_MemoryBaseAddr = reinterpret_cast<uint32_t>(rx_data);
   DMA_Init(cfg_->Rx_DMA_Channel, &DMA_InitStructure_);
 
-  //  Configure the "transfer complete" interrupt
-  DMA_ITConfig(cfg_->Tx_DMA_Channel, DMA_IT_TC, ENABLE);
+  //  Configure the "transfer complete" interrupt (for Rx)
+  DMA_ITConfig(cfg_->Rx_DMA_Channel, DMA_IT_TC, ENABLE);
 
   // Turn on the DMA streams
   DMA_Cmd(cfg_->Tx_DMA_Channel, ENABLE);
@@ -168,11 +168,6 @@ void SPI::transfer_complete_isr()
 
 void SPI::init_DMA()
 {
-
-  // Wait for any transfers to clear (this should be really short if at all)
-  while (SPI_I2S_GetFlagStatus(cfg_->SPIx, SPI_I2S_FLAG_TXE) == RESET);
-  SPI_ReceiveData8(cfg_->SPIx); // dummy read if needed
-
   // initialize the DMA struct, but don't initialize the peripheral.
   // The peripheral will be fully initialized and started when a transfer
   // is requested.
@@ -189,10 +184,6 @@ void SPI::init_DMA()
   DMA_InitStructure_.DMA_Mode                = DMA_Mode_Normal;
   DMA_InitStructure_.DMA_Priority            = DMA_Priority_High;
   DMA_InitStructure_.DMA_M2M                 = DMA_M2M_Disable;
-
-  // // Hookup the SPI Rx/Tx and the DMA
-  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Rx, ENABLE);
-  // SPI_I2S_DMACmd(cfg_->SPIx, SPI_I2S_DMAReq_Tx, ENABLE);
 }
 
 // ----------------------------------------------------------------------------
@@ -231,7 +222,7 @@ void SPI::init_NVIC()
 {
   // Configure the appropriate interrupt routine
   NVIC_InitTypeDef NVIC_InitStruct;
-  NVIC_InitStruct.NVIC_IRQChannel = cfg_->Tx_DMA_IRQn;
+  NVIC_InitStruct.NVIC_IRQChannel = cfg_->Rx_DMA_IRQn;
   NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
   NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x02;
   NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x02;
@@ -244,11 +235,12 @@ void SPI::init_NVIC()
 // IRQ Handlers associated with SPI and DMA
 // ----------------------------------------------------------------------------
 
-extern "C" void DMA1_Channel3_IRQHandler()
+// DMA SPI Rx: SPI1 to receive buffer complete
+extern "C" void DMA1_Channel2_IRQHandler()
 {
-  if (DMA_GetITStatus(DMA1_IT_TC3))
+  if (DMA_GetITStatus(DMA1_IT_TC2))
   {
-    DMA_ClearITPendingBit(DMA1_IT_TC3);
+    DMA_ClearITPendingBit(DMA1_IT_TC2);
     SPI1ptr->transfer_complete_isr();
   }
 }

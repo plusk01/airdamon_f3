@@ -113,7 +113,7 @@ namespace airdamon { namespace sensors {
     uint8_t in[15] = { 0 };
 
     out[0] = read_addr;
-    spi_->transfer(out, 2, in, nullptr);
+    spi_->transfer(out, 1+14, in, nullptr);
     while (spi_->is_busy());
     for (int i=0; i<14; i++)
       buffer[i] = in[i+1];
