@@ -13,7 +13,9 @@ namespace airdamon { namespace sensors {
     chip_select(false);
 
     // for configuration, use a slow SPI clock (large divisor)
-    spi_->set_divisor(128); //  72MHz / 128 = 0.5625 MHz
+    constexpr float SLOW_HZ = 0.5625*1e6; // 72MHz / 128 = 0.5625 MHz
+    spi_->set_divisor(SystemCoreClock/SLOW_HZ);
+
 
     // perform a device reset to restore default settings.
     write(RegAddr::PWR_MGMT_1, uv(PWR_MGMT_1::DEV_RST));
@@ -36,6 +38,11 @@ namespace airdamon { namespace sensors {
 
     write(RegAddr::INT_PIN_CFG, 0x10); // INT_ANYRD_2CLEAR -- IRQ cleared on any read
     write(RegAddr::INT_ENABLE, 0x01); // data ready interrupt enabled
+
+
+    // now that config is over, use a faster SPI clock for data transfer
+    constexpr float FAST_HZ = 18*1e6; // 72MHz / 4 = 18 MHz
+    spi_->set_divisor(SystemCoreClock/FAST_HZ);
   }
 
   // ----------------------------------------------------------------------------
