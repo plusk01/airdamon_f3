@@ -56,6 +56,7 @@ int main()
   float acc[3];
   float gyro[3];
   float temp;
+  uint64_t time_us;
 
   bool showAccel = true;
   bool showGyro = false;
@@ -65,7 +66,7 @@ int main()
   {
     info.toggle();
 
-    imu.read(acc, gyro, &temp);
+    imu.read(acc, gyro, &temp, &time_us);
 
     // Allow user to select a different data stream
     if (uart1.rx_bytes_waiting()) {

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <type_traits> //for std::underlying_type
 
+#include "system.h"
+
 #include "spi.h"
 #include "gpio.h"
 
@@ -89,8 +91,15 @@ namespace airdamon { namespace sensors {
     enum class PWR_MGMT_1: uint8_t { DEV_RST = 0x80, SLEEP = 0x40, CLKSEL_AUTO = 0x01 };
     enum class USER_CTRL: uint8_t { I2C_IF_DIS = 0x10, DMP_RST = 0x08, FIFO_RST = 0x04, I2C_MST_RST = 0x02, SIG_COND_RST = 0x01 };
 
+    // Initialize the MPU device control and provide the SPI and chip select GPIO pin to use
     void init(SPI* spi, GPIO* cs);
-    void read(float* accel, float* gyro, float* temp);
+
+    // Use async (DMA w/ ISR) SPI routine to read IMU data,
+    // with the associated timestamp that IMU made the data available
+    void read(float* accel, float* gyro, float* temp, uint64_t* time_us);
+
+    // Use blocking (non-DMA and non-ISR) SPI routine to read IMU data
+    void read_blocking(float* accel, float* gyro, float* temp);
 
 
   private:
