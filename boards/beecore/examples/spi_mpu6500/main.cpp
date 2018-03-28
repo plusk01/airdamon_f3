@@ -51,10 +51,6 @@ int main()
   imu.init(&spi1, &cs);
   info.off();
 
-  // GPIO exti_;
-  // exti_.init(GPIOC, GPIO_Pin_13, GPIO::INPUT);
-
-
   delay(2000);
 
   float acc[3];

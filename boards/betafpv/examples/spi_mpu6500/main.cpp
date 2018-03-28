@@ -32,16 +32,17 @@ int main()
   info.init(GPIOB, GPIO_Pin_8);
 
   VCP vcp;
+  vcp.init();
   vcp.connect_to_printf();
 
   printf("\n**** SPI IMU MPU6500 ****\n\n");
 
-  SPI spi1;
+  airdamon::SPI spi1;
   GPIO cs;
-  sensors::MPU6500 imu;
+  airdamon::sensors::MPU6500 imu;
 
   info.on();
-  spi1.init(SPI1);
+  spi1.init(&spi_config[CFG_SPI1]);
   cs.init(GPIOB, GPIO_Pin_9, GPIO::OUTPUT);
   imu.init(&spi1, &cs);
   info.off();
@@ -51,6 +52,7 @@ int main()
   float acc[3];
   float gyro[3];
   float temp;
+  uint64_t time_us;
 
   bool showAccel = true;
   bool showGyro = false;
@@ -60,7 +62,7 @@ int main()
   {
     info.toggle();
 
-    imu.read(acc, gyro, &temp);
+    imu.read(acc, gyro, &temp, &time_us);
 
     // Allow user to select a different data stream
     if (vcp.rx_bytes_waiting()) {
