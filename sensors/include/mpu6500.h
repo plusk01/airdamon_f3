@@ -101,14 +101,29 @@ namespace airdamon { namespace sensors {
     // Use blocking (non-DMA and non-ISR) SPI routine to read IMU data
     void read_blocking(float* accel, float* gyro, float* temp);
 
+    // Is there new data to asynchronously read?
+    bool has_new_data() const { return new_data_; }
+
+    // Let the IMU object know when MPU6500 triggered the EXTI
+    void handle_exti_isr();
 
   private:
     SPI* spi_;
     GPIO* cs_;
+    GPIO exti_;
 
+    // the latest data from the MPU for async reads
+    float accel_[3], gyro_[3], temp_;
+    uint8_t buff_tx_[15] = { 0 };
+    uint8_t buff_rx_[15] = { 0 };
+    uint64_t imu_timestamp_us_ = 0;
+    bool new_data_ = false;
+
+    void init_EXTI();
     void write(RegAddr addr, uint8_t data);
-    void read(RegAddr addr, uint8_t* buffer, uint16_t len);
     void chip_select(bool enable);
+    void decode(uint8_t* buffer, float* accel, float* gyro, float* temp);
+    void data_rx_cb();
   };
 
 }}

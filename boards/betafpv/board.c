@@ -18,6 +18,7 @@ void board_init(void)
 
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
 
   // Enable clock to SPI1, an APB2 peripheral
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
