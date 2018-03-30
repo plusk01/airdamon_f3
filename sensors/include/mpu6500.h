@@ -117,7 +117,7 @@ namespace airdamon { namespace sensors {
     uint8_t buff_tx_[15] = { 0 };
     uint8_t buff_rx_[15] = { 0 };
     uint64_t imu_timestamp_us_ = 0;
-    bool new_data_ = false;
+    volatile bool new_data_ = false;
 
     void init_EXTI();
     void write(RegAddr addr, uint8_t data);
