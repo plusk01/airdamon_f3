@@ -60,7 +60,10 @@ int main()
 
   while(1)
   {
+    delay(50);
     info.toggle();
+
+    if (!imu.has_new_data()) continue;
 
     imu.read(acc, gyro, &temp, &time_us);
 
@@ -78,7 +81,7 @@ int main()
       char sign, axis;
       findAxis(acc, &sign, &axis);
 
-      printf("Accel (%c%c): %d\t%d\t%d\n",
+      printf("Accel (%c%c): %d\t%d\t%d",
           sign, axis,
           static_cast<int>(acc[0]*1000),
           static_cast<int>(acc[1]*1000),
@@ -91,7 +94,7 @@ int main()
       char sign, axis;
       findAxis(gyro, &sign, &axis);
 
-      printf("Gyro (%c%c): %d\t%d\t%d\n",
+      printf("Gyro (%c%c): %d\t%d\t%d",
                 sign, axis,
                 static_cast<int>(gyro[0]*1000),
                 static_cast<int>(gyro[1]*1000),
@@ -99,9 +102,9 @@ int main()
     }
 
     if (showTemp)
-      printf("Temp: %d\n",
+      printf("Temp: %d",
                 static_cast<int>(temp*1000));
 
-    delay(50);
+    printf("\t\t%d,%d\n",static_cast<int>(time_us/1000), static_cast<int>(micros()/1000));
   }
 }

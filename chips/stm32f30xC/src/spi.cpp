@@ -78,6 +78,9 @@ void SPI::set_divisor(uint16_t new_divisor) {
 
 uint8_t SPI::transfer_byte(uint8_t data)
 {
+  // prevent being interrupted
+  busy_ = true;
+
   uint16_t spiTimeout = 0x1000;
 
   // Loop while DR register is not empty
@@ -91,6 +94,8 @@ uint8_t SPI::transfer_byte(uint8_t data)
   spiTimeout = 0x1000;
   while (SPI_I2S_GetFlagStatus(cfg_->SPIx, SPI_I2S_FLAG_RXNE) == RESET)
     if ((--spiTimeout) == 0) return 0x00;
+
+  busy_ = false;
 
   // We received a byte from the SPI bus
   return SPI_ReceiveData8(cfg_->SPIx);

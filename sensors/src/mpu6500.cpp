@@ -100,13 +100,13 @@ void MPU6500::read_blocking(float* accel, float* gyro, float* temp)
   // send address of register to write to
   spi_->transfer_byte(read_addr);
 
+  // how many bytes to receive
+  static constexpr uint8_t len = 14;
+
   // Send the data to device (MSB first)
-  while (len > 0)
-  {
-    *buffer = spi_->transfer_byte(uv(RegAddr::DUMMY_BYTE));
-    len--;
-    buffer++;
-  }
+  for (int i=0; i<len; i++)
+    buffer[i] = spi_->transfer_byte(uv(RegAddr::DUMMY_BYTE));
+
 #else // use DMA, but blocking
   uint8_t out[15] = { 0 };
   uint8_t in[15] = { 0 };
@@ -130,6 +130,7 @@ void MPU6500::read_blocking(float* accel, float* gyro, float* temp)
 void MPU6500::handle_exti_isr()
 {
   // There is data ready to be read from the MPU via SPI.
+  // if (spi_->is_busy()) return;
 
   // Timestamp the IMU data that will be coming in over SPI
   imu_timestamp_us_ = micros();
@@ -139,7 +140,7 @@ void MPU6500::handle_exti_isr()
   spi_->transfer(buff_tx_, 1+14, buff_rx_, std::bind(&MPU6500::data_rx_cb, this));
   chip_select(false);
 
-  // Note: We don't care about the first received bytes, only the 14 data bytes
+  // Note: We don't care about the first received byte, only the 14 data bytes
 }
 
 // ----------------------------------------------------------------------------
