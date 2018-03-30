@@ -1,14 +1,13 @@
 #ifndef SPI_H
 #define SPI_H
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 #include <functional>
+#pragma GCC pop_options
 
 #include "system.h"
 #include "gpio.h"
-
-extern "C" {
-#include "printf.h"
-}
 
 namespace airdamon {
 
@@ -44,7 +43,7 @@ namespace airdamon {
 
     // transfer an array of bytes using DMA (asynchronous call). Can be made synchronous
     // by waiting for SPi to not be busy: while (spi->is_busy());
-    void transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::function<void(void)> cb);
+    void transfer(uint8_t *tx_data, uint32_t num_bytes, volatile uint8_t *rx_data, std::function<void(void)> cb);
 
     // is there a DMA (asynchronous) transfer happening?
     bool is_busy() const { return busy_; }
@@ -61,7 +60,7 @@ namespace airdamon {
     DMA_InitTypeDef DMA_InitStructure_;
 
     uint32_t errors_ = 0;
-    bool busy_ = false;
+    volatile bool busy_ = false;
 
     // callback once DMA transfer is complete
     std::function<void(void)> cb_;

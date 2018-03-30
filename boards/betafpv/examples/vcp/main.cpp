@@ -10,6 +10,7 @@ int main()
   int i = 0;
 
   VCP vcp;
+  vcp.init();
   vcp.connect_to_printf();
 
   printf("\n**** VCP (Rx / Tx capable) Example ****\n\n");

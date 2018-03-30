@@ -130,7 +130,7 @@ void MPU6500::read_blocking(float* accel, float* gyro, float* temp)
 void MPU6500::handle_exti_isr()
 {
   // There is data ready to be read from the MPU via SPI.
-  // if (spi_->is_busy()) return;
+  if (spi_->is_busy()) return;
 
   // Timestamp the IMU data that will be coming in over SPI
   imu_timestamp_us_ = micros();
@@ -192,7 +192,7 @@ void MPU6500::chip_select(bool enable)
 
 // ----------------------------------------------------------------------------
 
-void MPU6500::decode(uint8_t* buffer, float* accel, float* gyro, float* temp)
+void MPU6500::decode(const volatile uint8_t* buffer, volatile float* accel, volatile float* gyro, volatile float* temp)
 {
   // reconstruct high and low bits. Note that the value is stored
   // as two's complement, so make sure to cast to signed at the end.

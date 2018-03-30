@@ -103,7 +103,7 @@ uint8_t SPI::transfer_byte(uint8_t data)
 
 // ----------------------------------------------------------------------------
 
-void SPI::transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::function<void(void)> cb)
+void SPI::transfer(uint8_t *tx_data, uint32_t num_bytes, volatile uint8_t *rx_data, std::function<void(void)> cb)
 {
   // use DMA to transmit an array of bytes
   busy_ = true;
@@ -115,7 +115,7 @@ void SPI::transfer(uint8_t *tx_data, uint32_t num_bytes, uint8_t *rx_data, std::
     rx_data = dummy_buffer;
 
   // Connect with transfer callback
-  if (cb)
+  if (cb != nullptr)
     cb_ = cb;
   else
     cb_ = nullptr;

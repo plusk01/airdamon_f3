@@ -113,16 +113,16 @@ namespace airdamon { namespace sensors {
     GPIO exti_;
 
     // the latest data from the MPU for async reads
-    float accel_[3], gyro_[3], temp_;
+    volatile float accel_[3], gyro_[3], temp_;
     uint8_t buff_tx_[15] = { 0 };
-    uint8_t buff_rx_[15] = { 0 };
-    uint64_t imu_timestamp_us_ = 0;
+    volatile uint8_t buff_rx_[15] = { 0 };
+    volatile uint64_t imu_timestamp_us_ = 0;
     volatile bool new_data_ = false;
 
     void init_EXTI();
     void write(RegAddr addr, uint8_t data);
     void chip_select(bool enable);
-    void decode(uint8_t* buffer, float* accel, float* gyro, float* temp);
+    void decode(const volatile uint8_t* buffer, volatile float* accel, volatile float* gyro, volatile float* temp);
     void data_rx_cb();
   };
 
