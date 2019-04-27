@@ -12,6 +12,7 @@ int main()
   uart1.connect_to_printf();
 
   VCP vcp;
+  vcp.init();
   // vcp.connect_to_printf();
 
   airdamon::PWM m1, m2, m3, m4;
@@ -27,6 +28,7 @@ int main()
 
 
   int i = 1000;
+  // float j = 0.0f;
 
   while(1)
   {
@@ -37,6 +39,13 @@ int main()
     m2.write_us(i);
     m3.write_us(i);
     m4.write_us(i);
+
+    // j += 0.001f;
+    // if (j>0.1f) j = 0.0f;
+    // m1.write(j);
+    // m2.write(j);
+    // m3.write(j);
+    // m4.write(j);
 
     delay(50);
   }

@@ -24,7 +24,11 @@ void PWM::init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uin
 
 void PWM::write(float value)
 {
-  *CCRx_ = min_us_ + static_cast<uint32_t>((max_us_ - min_us_) * value);
+  // *CCRx_ = min_us_ + static_cast<uint32_t>((max_us_ - min_us_) * value);
+
+  // pwm usecs
+  uint16_t us = min_us_ + static_cast<uint16_t>((max_us_ - min_us_) * value);
+  write_us(us);
 }
 
 // ----------------------------------------------------------------------------
