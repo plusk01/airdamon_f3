@@ -14,6 +14,7 @@ int main()
   rc.init(&uart2);
 
   VCP vcp;
+  vcp.init();
   vcp.connect_to_printf();
 
 

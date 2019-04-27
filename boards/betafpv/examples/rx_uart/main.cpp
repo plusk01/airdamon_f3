@@ -31,6 +31,7 @@ int main()
   uart2.register_rx_callback(handle_byte);
 
   VCP vcp;
+  vcp.init();
   vcp.connect_to_printf();
 
   while(1)
