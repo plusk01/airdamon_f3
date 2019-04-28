@@ -1,3 +1,12 @@
 obj
 build
 *~
+
+# Qt Creator
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
