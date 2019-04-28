@@ -216,6 +216,7 @@ void MPU6500::decode(const volatile uint8_t* buffer, volatile float* accel, vola
   // is half the positive range: 0x7FFF
   constexpr float gyro_FS = 2000.0; // depends on the reg values
   constexpr float gyro_scale = gyro_FS / 0x7FFF;
+  constexpr float deg2rad = 3.14159f/180.0f;
 
   // temperature sensitivity
   constexpr float temp_scale = (1.0 / 333.87);
@@ -227,9 +228,9 @@ void MPU6500::decode(const volatile uint8_t* buffer, volatile float* accel, vola
 
   *temp = static_cast<float>(raw[3])*temp_scale;
 
-  gyro[0] = static_cast<float>(raw[4])*gyro_scale;
-  gyro[1] = static_cast<float>(raw[5])*gyro_scale;
-  gyro[2] = static_cast<float>(raw[6])*gyro_scale;
+  gyro[0] = static_cast<float>(raw[4])*gyro_scale*deg2rad;
+  gyro[1] = static_cast<float>(raw[5])*gyro_scale*deg2rad;
+  gyro[2] = static_cast<float>(raw[6])*gyro_scale*deg2rad;
 }
 
 // ----------------------------------------------------------------------------
