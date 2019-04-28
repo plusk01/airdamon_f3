@@ -1,5 +1,11 @@
 #include <discoveryf3.h>
 
+/**
+ * It seems that this example no longer works due to SPI/DMA changes
+ * for MPU and BetaFPV/Beecore. See the commit history for more details
+ * and hints on how to fix it.
+ */
+
 int main()
 {
   board_init();
@@ -14,11 +20,12 @@ int main()
   uart1.connect_to_printf();
 
   VCP vcp;
+  vcp.init();
   // vcp.connect_to_printf();
 
   printf("\n**** SPI Gyro L3GD20 ****\n\n");
 
-  SPI spi1;
+  airdamon::SPI spi1;
   GPIO cs;
   sensors::L3GD20 gyro;
 
@@ -37,7 +44,7 @@ int main()
   filt_params.hpf_cutoff_freq   = sensors::L3GD20::HPF_CF::F0;
 
   warn.on();
-  spi1.init(SPI1);
+  spi1.init(&spi_config[CFG_SPI1]);
   cs.init(GPIOE, GPIO_Pin_3, GPIO::OUTPUT);
   gyro.init(&spi1, &cs, &gyro_params);
   gyro.enable_hpfilter(&filt_params);

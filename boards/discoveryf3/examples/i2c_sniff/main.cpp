@@ -12,6 +12,7 @@ int main()
   warn.init(GPIOE, GPIO_Pin_12);
 
   VCP vcp;
+  vcp.init();
   vcp.connect_to_printf();
 
   printf("\n**** I2C Sniffer ****\n\n");
