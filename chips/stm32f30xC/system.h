@@ -16,6 +16,7 @@
 #include "stm32f30x_tim.h"
 #include "stm32f30x_dma.h"
 #include "stm32f30x_usart.h"
+#include "stm32f30x_flash.h"
 
 #ifdef __cplusplus
 extern "C" {

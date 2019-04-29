@@ -9,6 +9,7 @@
 #include "vcp.h"
 #include "spi.h"
 #include "pwm.h"
+#include "flash.h"
 
 #include "mpu6500.h"
 #include "rc_sbus.h"
