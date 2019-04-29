@@ -33,6 +33,8 @@
 #include "usb_pwr.h"
 #include "hw_config.h"
 
+extern __IO uint32_t packetSent; // pcl (HJI)
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -157,6 +159,9 @@ void __attribute__((optimize("O0"))) Virtual_Com_Port_Reset(void)
 
     /* Set this device to response on default address */
     SetDeviceAddress(0);
+
+    // allow hotplug -- reset transmission state
+    packetSent = 0; // pcl (HJI)
 
     bDeviceState = ATTACHED;
 }
