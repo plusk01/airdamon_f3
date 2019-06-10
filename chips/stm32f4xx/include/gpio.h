@@ -2,7 +2,7 @@
 #define GPIO_H
 
 #include "system.h"
-#include "stm32f30x_gpio.h"
+#include "stm32f4xx_gpio.h"
 
 class GPIO
 {
