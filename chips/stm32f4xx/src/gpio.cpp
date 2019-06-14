@@ -48,7 +48,7 @@ void GPIO::set_mode(gpio_mode_t mode)
   {
   case INPUT:
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStruct.GPIO_OType = GPIO_OType_OD;
+    GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
     break;
   case OUTPUT:
@@ -77,7 +77,7 @@ void GPIO::set_mode(gpio_mode_t mode)
   }
 
   // Who cares about power usage?  Go as fast as possible.
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
 
   // Initialize the GPIO
   GPIO_Init(port_, &GPIO_InitStruct);
