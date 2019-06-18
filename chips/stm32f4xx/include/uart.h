@@ -42,9 +42,12 @@ namespace airdamon {
     // USART Tx Channel DMA IRQ number
     IRQn_Type Tx_DMA_IRQn;
 
-    // DMA Channels regs for USART Rx and Tx
-    DMA_Stream_TypeDef* Rx_DMA_Channel;
-    DMA_Stream_TypeDef* Tx_DMA_Channel;
+    // DMA Stream regs for USART Rx and Tx
+    DMA_Stream_TypeDef* Rx_DMA_Stream;
+    DMA_Stream_TypeDef* Tx_DMA_Stream;
+
+    // peripheral request channel. Table 42/43 of refman
+    uint32_t DMA_Channel;
   };
 
 
@@ -76,7 +79,6 @@ namespace airdamon {
 
     // Check to see if there are bytes to be read.
     uint32_t rx_bytes_waiting();
-
 
     //
     // Tx functions
@@ -110,8 +112,8 @@ namespace airdamon {
     void init_NVIC();
 
     // Buffers to hold data managed by DMA, from/to Rx/Tx
-    static constexpr int RX_BUFFER_SIZE = 64;
-    static constexpr int TX_BUFFER_SIZE = 64;
+    static constexpr int RX_BUFFER_SIZE = 512;
+    static constexpr int TX_BUFFER_SIZE = 512;
     uint8_t rx_buffer_[RX_BUFFER_SIZE];
     uint8_t tx_buffer_[TX_BUFFER_SIZE];
     uint16_t rx_buffer_head_, rx_buffer_tail_;

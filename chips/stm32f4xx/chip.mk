@@ -14,8 +14,7 @@ VCP_DIR       = $(CHIP_DIR)/vcp
 #################################
 
 INCLUDE_DIRS += $(CHIP_DIR) \
-				$(CHIP_DIR)/include \
-                $(LIB_DIR) \
+								$(CHIP_DIR)/include \
                 $(STDPERIPH_DIR)/inc \
                 $(CMSIS_DIR)/CM4/CoreSupport \
                 $(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx \

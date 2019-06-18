@@ -20,14 +20,14 @@
 
 constexpr int NUM_UARTS = 2;
 constexpr int CFG_UART1 = 0;
-constexpr int CFG_UART2 = 1;
-// const airdamon::UARTConfig uart_config[NUM_UARTS] = {
-//   // USARTx, GPIOx, rx_pin, tx_pin, rx_pin_source, tx_pin_source, GPIO_AF, USARTx_IRQn, Tx_DMA_IRQn, Rx_DMA_Channel, Tx_DMA_Channel
-//   // UART1 is unused
-//   {USART1, GPIOA, GPIO_Pin_10, GPIO_Pin_9, GPIO_PinSource10, GPIO_PinSource9, GPIO_AF_7, USART1_IRQn, DMA1_Channel4_IRQn, DMA1_Channel5, DMA1_Channel4},
-//   // UART2 is connected to the atmega 328p for RC SBUS
-//   {USART2, GPIOA, GPIO_Pin_15, GPIO_Pin_14, GPIO_PinSource15, GPIO_PinSource14, GPIO_AF_7, USART2_IRQn, DMA1_Channel7_IRQn, DMA1_Channel6, DMA1_Channel7}
-// };
+constexpr int CFG_UART3 = 1;
+const airdamon::UARTConfig uart_config[NUM_UARTS] = {
+  // USARTx, GPIOx, rx_pin, tx_pin, rx_pin_source, tx_pin_source, GPIO_AF, USARTx_IRQn, Tx_DMA_IRQn, Rx_DMA_Stream, Tx_DMA_Stream, DMA_Channel
+  // UART1 is CONN4/MainPort (Doesn't work?)
+  {USART1, GPIOA, GPIO_Pin_10, GPIO_Pin_9, GPIO_PinSource10, GPIO_PinSource9, GPIO_AF_USART1, USART1_IRQn, DMA2_Stream7_IRQn, DMA2_Stream5, DMA2_Stream7, DMA_Channel_4},
+  // USART3 is CONN1/FlexiPort
+  {USART3, GPIOB, GPIO_Pin_11, GPIO_Pin_10, GPIO_PinSource11, GPIO_PinSource10, GPIO_AF_USART3, USART3_IRQn, DMA1_Stream3_IRQn, DMA1_Stream1, DMA1_Stream3, DMA_Channel_4},
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //                            SPI Configuration                              //
