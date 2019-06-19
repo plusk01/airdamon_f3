@@ -3,7 +3,7 @@
 **
 **  File        : stm32_flash.ld
 **
-**  Abstract    : Linker script for STM32F103CB Device with
+**  Abstract    : Linker script for STM32F405xx Device with
 **                1024KByte FLASH, 192KByte RAM
 **
 *****************************************************************************
