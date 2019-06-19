@@ -112,8 +112,8 @@ namespace airdamon {
     void init_NVIC();
 
     // Buffers to hold data managed by DMA, from/to Rx/Tx
-    static constexpr int RX_BUFFER_SIZE = 512;
-    static constexpr int TX_BUFFER_SIZE = 512;
+    static constexpr int RX_BUFFER_SIZE = 64;
+    static constexpr int TX_BUFFER_SIZE = 64;
     uint8_t rx_buffer_[RX_BUFFER_SIZE];
     uint8_t tx_buffer_[TX_BUFFER_SIZE];
     uint16_t rx_buffer_head_, rx_buffer_tail_;

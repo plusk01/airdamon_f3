@@ -269,7 +269,7 @@ void UART::init_DMA()
   DMA_InitStructure.DMA_Mode                = DMA_Mode_Normal;
   DMA_Init(cfg_->Tx_DMA_Stream, &DMA_InitStructure);
 
-  // Configure the Tx DMA Channel Registers
+  // Configure the Rx DMA Channel Registers
   DMA_DeInit(cfg_->Rx_DMA_Stream);
   DMA_InitStructure.DMA_Memory0BaseAddr     = reinterpret_cast<uint32_t>(rx_buffer_);
   DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralToMemory;
@@ -334,26 +334,36 @@ extern "C" void USART1_IRQHandler(void)
 
 // extern "C" void DMA2_Stream5_IRQHandler(void)
 // {
-//   UART1Ptr->DMA_Rx_IRQ_callback();
-
-//   DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);
+//   if (DMA_GetITStatus(DMA2_Stream5, DMA_IT_TCIF5)) {
+//     DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);
+//
+//     UART1Ptr->DMA_Rx_IRQ_callback();
+//   }
 // }
 
 // ----------------------------------------------------------------------------
 
 extern "C" void DMA2_Stream7_IRQHandler(void)
 {
-  // Signal that we are done with the latest DMA transfer  
-  DMA_Cmd(DMA2_Stream7, DISABLE);
+  // If we are in this ISR, the following should be true;
+  // but it is healthy to check.
+  if (DMA_GetITStatus(DMA2_Stream7, DMA_IT_TCIF7)) {
+    // Signal that we are done with the latest DMA transfer
+    DMA_Cmd(DMA2_Stream7, DISABLE);
 
-  // If there is still data to process, start again.
-  // This happens when data was added to the buffer, but we were in
-  // the middle of a transfer. Now that the transfer is finished
-  // (marked by disabling the DMA), we can process the buffer.
-  if (!UART1Ptr->tx_buffer_empty())
-    UART1Ptr->start_DMA_transfer();
+    // The start_DMA_transfer method below could re-enable this DMA stream.
+    // If this bit is not cleared, a race condition could occur.
+    DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
 
-  DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
+    // If there is still data to process, start again.
+    // This happens when data was added to the buffer, but we were in
+    // the middle of a transfer. Now that the transfer is finished
+    // (marked by disabling the DMA), we can process the buffer.
+    if (!UART1Ptr->tx_buffer_empty())
+      UART1Ptr->start_DMA_transfer();
+
+    DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -369,24 +379,32 @@ extern "C" void USART3_IRQHandler(void)
 
 // extern "C" void DMA1_Stream1_IRQHandler(void)
 // {
-//   UART3Ptr->DMA_Rx_IRQ_callback();
-
-//   DMA_ClearITPendingBit(DMA1_Stream1, DMA_IT_TCIF1);
+//   if (DMA_GetITStatus(DMA1_Stream1, DMA_IT_TCIF1)) {
+//     DMA_ClearITPendingBit(DMA1_Stream1, DMA_IT_TCIF1);
+//
+//     UART3Ptr->DMA_Rx_IRQ_callback();
+//   }
 // }
 
 // ----------------------------------------------------------------------------
 
 extern "C" void DMA1_Stream3_IRQHandler(void)
 {
-  // Signal that we are done with the latest DMA transfer  
-  DMA_Cmd(DMA1_Stream3, DISABLE);
+  // If we are in this ISR, the following should be true;
+  // but it is healthy to check.
+  if (DMA_GetITStatus(DMA1_Stream3, DMA_IT_TCIF3)) {
+    // Signal that we are done with the latest DMA transfer
+    DMA_Cmd(DMA1_Stream3, DISABLE);
 
-  // If there is still data to process, start again.
-  // This happens when data was added to the buffer, but we were in
-  // the middle of a transfer. Now that the transfer is finished
-  // (marked by disabling the DMA), we can process the buffer.
-  if (!UART3Ptr->tx_buffer_empty())
-    UART3Ptr->start_DMA_transfer();
+    // The start_DMA_transfer method below could re-enable this DMA stream.
+    // If this bit is not cleared, a race condition could occur.
+    DMA_ClearITPendingBit(DMA1_Stream3, DMA_IT_TCIF3);
 
-  DMA_ClearITPendingBit(DMA1_Stream3, DMA_IT_TCIF3);
+    // If there is still data to process, start again.
+    // This happens when data was added to the buffer, but we were in
+    // the middle of a transfer. Now that the transfer is finished
+    // (marked by disabling the DMA), we can process the buffer.
+    if (!UART3Ptr->tx_buffer_empty())
+      UART3Ptr->start_DMA_transfer();
+  }
 }
