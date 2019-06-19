@@ -349,17 +349,23 @@ extern "C" void USART1_IRQHandler(void)
 
 extern "C" void DMA1_Channel4_IRQHandler(void)
 {
-  // Signal that we are done with the latest DMA transfer
-  DMA_Cmd(DMA1_Channel4, DISABLE);
+  // If we are in this ISR, the following should be true;
+  // but it is healthy to check.
+  if (DMA_GetITStatus(DMA1_IT_TC4)) {
+    // Signal that we are done with the latest DMA transfer
+    DMA_Cmd(DMA1_Channel4, DISABLE);
 
-  // If there is still data to process, start again.
-  // This happens when data was added to the buffer, but we were in
-  // the middle of a transfer. Now that the transfer is finished
-  // (marked by disabling the DMA), we can process the buffer.
-  if (!UART1Ptr->tx_buffer_empty())
-    UART1Ptr->start_DMA_transfer();
+    // The start_DMA_transfer method below could re-enable this DMA stream.
+    // If this bit is not cleared, a race condition could occur.
+    DMA_ClearITPendingBit(DMA1_IT_TC4);
 
-  DMA_ClearITPendingBit(DMA1_IT_TC4);
+    // If there is still data to process, start again.
+    // This happens when data was added to the buffer, but we were in
+    // the middle of a transfer. Now that the transfer is finished
+    // (marked by disabling the DMA), we can process the buffer.
+    if (!UART1Ptr->tx_buffer_empty())
+      UART1Ptr->start_DMA_transfer();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -376,15 +382,22 @@ extern "C" void USART2_IRQHandler(void)
 
 extern "C" void DMA1_Channel7_IRQHandler(void)
 {
-  // Signal that we are done with the latest DMA transfer
-  DMA_Cmd(DMA1_Channel7, DISABLE);
+  // If we are in this ISR, the following should be true;
+  // but it is healthy to check.
+  if (DMA_GetITStatus(DMA1_IT_TC7)) {
 
-  // If there is still data to process, start again.
-  // This happens when data was added to the buffer, but we were in
-  // the middle of a transfer. Now that the transfer is finished
-  // (marked by disabling the DMA), we can process the buffer.
-  if (!UART2Ptr->tx_buffer_empty())
-    UART2Ptr->start_DMA_transfer();
+    // Signal that we are done with the latest DMA transfer
+    DMA_Cmd(DMA1_Channel7, DISABLE);
 
-  DMA_ClearITPendingBit(DMA1_IT_TC7);
+    // The start_DMA_transfer method below could re-enable this DMA stream.
+    // If this bit is not cleared, a race condition could occur.
+    DMA_ClearITPendingBit(DMA1_IT_TC7);
+
+    // If there is still data to process, start again.
+    // This happens when data was added to the buffer, but we were in
+    // the middle of a transfer. Now that the transfer is finished
+    // (marked by disabling the DMA), we can process the buffer.
+    if (!UART2Ptr->tx_buffer_empty())
+      UART2Ptr->start_DMA_transfer();
+  }
 }
