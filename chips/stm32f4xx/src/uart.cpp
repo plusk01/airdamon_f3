@@ -288,6 +288,11 @@ void UART::init_DMA()
   // Turn on the 'transfer complete' interrupt from the Tx DMA
   DMA_ITConfig(cfg_->Tx_DMA_Stream, DMA_IT_TC, ENABLE);
 
+  // Turn on the 'transfer error' interrupt from the Tx DMA.
+  // Occasional bus errors occur that prevent the Tx stream from
+  // being enabled and thus need to be cleared (see f4 refman 10.3.18)
+  DMA_ITConfig(cfg_->Tx_DMA_Stream, DMA_IT_TE, ENABLE);
+
   // Initialize the Rx/Tx buffers
   rx_buffer_head_ = RX_BUFFER_SIZE; // DMA counts down on receive
   rx_buffer_tail_ = RX_BUFFER_SIZE;
@@ -348,12 +353,12 @@ extern "C" void DMA2_Stream7_IRQHandler(void)
   // If we are in this ISR, the following should be true;
   // but it is healthy to check.
   if (DMA_GetITStatus(DMA2_Stream7, DMA_IT_TCIF7)) {
-    // Signal that we are done with the latest DMA transfer
-    DMA_Cmd(DMA2_Stream7, DISABLE);
-
     // The start_DMA_transfer method below could re-enable this DMA stream.
     // If this bit is not cleared, a race condition could occur.
     DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
+
+    // Signal that we are done with the latest DMA transfer
+    DMA_Cmd(DMA2_Stream7, DISABLE);
 
     // If there is still data to process, start again.
     // This happens when data was added to the buffer, but we were in
@@ -361,8 +366,10 @@ extern "C" void DMA2_Stream7_IRQHandler(void)
     // (marked by disabling the DMA), we can process the buffer.
     if (!UART1Ptr->tx_buffer_empty())
       UART1Ptr->start_DMA_transfer();
+  }
 
-    DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
+  if (DMA_GetITStatus(DMA2_Stream7, DMA_IT_TEIF7)) {
+    DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TEIF7);
   }
 }
 
@@ -393,12 +400,12 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
   // If we are in this ISR, the following should be true;
   // but it is healthy to check.
   if (DMA_GetITStatus(DMA1_Stream3, DMA_IT_TCIF3)) {
-    // Signal that we are done with the latest DMA transfer
-    DMA_Cmd(DMA1_Stream3, DISABLE);
-
     // The start_DMA_transfer method below could re-enable this DMA stream.
     // If this bit is not cleared, a race condition could occur.
     DMA_ClearITPendingBit(DMA1_Stream3, DMA_IT_TCIF3);
+
+    // Signal that we are done with the latest DMA transfer
+    DMA_Cmd(DMA1_Stream3, DISABLE);
 
     // If there is still data to process, start again.
     // This happens when data was added to the buffer, but we were in
@@ -406,5 +413,9 @@ extern "C" void DMA1_Stream3_IRQHandler(void)
     // (marked by disabling the DMA), we can process the buffer.
     if (!UART3Ptr->tx_buffer_empty())
       UART3Ptr->start_DMA_transfer();
+  }
+
+  if (DMA_GetITStatus(DMA1_Stream3, DMA_IT_TEIF3)) {
+    DMA_ClearITPendingBit(DMA1_Stream3, DMA_IT_TEIF3);
   }
 }
