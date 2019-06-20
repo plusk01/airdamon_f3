@@ -32,6 +32,8 @@ TARGET = vcp
 
 DEBUG ?= GDB
 
+FIRMWARE_NAME_STRING = "custom firmware name"
+
 #################################
 # Working directories
 #################################
