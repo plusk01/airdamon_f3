@@ -5,11 +5,13 @@
 // printf function for putting a single character to screen
 static void _putc(void* p, char c)
 {
-  VCP* pVCP = static_cast<VCP*>(p);
+  airdamon::VCP* pVCP = static_cast<airdamon::VCP*>(p);
   pVCP->write(reinterpret_cast<uint8_t*>(&c), 1);
 }
 
 // ----------------------------------------------------------------------------
+
+namespace airdamon {
 
 VCP::VCP() {}
 
@@ -20,14 +22,12 @@ void VCP::init()
   // Initialize the GPIOs for the pins
   rx_pin_.init(GPIOA, GPIO_Pin_11, GPIO::PERIPH_IN_OUT);
   tx_pin_.init(GPIOA, GPIO_Pin_12, GPIO::PERIPH_IN_OUT);
+  vbus_sense_.init(GPIOC, GPIO_Pin_5, GPIO::INPUT);
 
   // resets the connection for the host
   send_disconnect_signal();
 
-  Set_System();
-  Set_USBClock();
-  USB_Interrupts_Config();
-  USB_Init();
+  USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_CDC_cb, &USR_cb);
 }
 
 // ----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ void VCP::write(const uint8_t* ch, uint8_t len)
     len -= num_bytes_sent;
     ch += num_bytes_sent;
 
-    if (len == 0 || millis() > (start + USB_TIMEOUT))
+    if (millis() > (start + USB_TIMEOUT))
       break;
   }
 }
@@ -90,9 +90,9 @@ uint32_t VCP::rx_bytes_waiting()
 
 // ----------------------------------------------------------------------------
 
-bool VCP::in_bulk_mode()
+bool VCP::vbus_connected()
 {
-  return false;
+  return vbus_sense_.read();
 }
 
 // ----------------------------------------------------------------------------
@@ -107,3 +107,5 @@ void VCP::send_disconnect_signal()
   tx_pin_.write(GPIO::HIGH);
   tx_pin_.set_mode(GPIO::PERIPH_IN_OUT);
 }
+
+} // ns airdamon

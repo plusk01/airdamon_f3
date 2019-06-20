@@ -50,7 +50,7 @@ void VCP::write(const uint8_t* ch, uint8_t len)
     len -= num_bytes_sent;
     ch += num_bytes_sent;
 
-    if (len == 0 || millis() > (start + USB_TIMEOUT))
+    if (millis() > (start + USB_TIMEOUT))
       break;
   }
 }

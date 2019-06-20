@@ -9,7 +9,7 @@ int main()
 
   int i = 0;
 
-  VCP vcp;
+  airdamon::VCP vcp;
   vcp.init();
   vcp.connect_to_printf();
 

@@ -16,53 +16,56 @@ extern "C" {
 #include "printf.h"
 }
 
+namespace airdamon {
 
-class VCP
-{
-public:
-  VCP();
+  class VCP
+  {
+  public:
+    VCP();
 
-  void init();
+    void init();
 
-  // Use this object for printf
-  void connect_to_printf();
+    // Use this object for printf
+    void connect_to_printf();
 
-  //
-  // Rx functions
-  //
+    // check if USB is connected to a powered bus
+    bool vbus_connected();
 
-  // Get a single byte from buffer. Must call
-  //  `rx_bytes_waiting()` beforehand.
-  uint8_t read_byte();
+    //
+    // Rx functions
+    //
 
-  // Check to see if there are bytes to be read.
-  uint32_t rx_bytes_waiting();
+    // Get a single byte from buffer. Must call
+    //  `rx_bytes_waiting()` beforehand.
+    uint8_t read_byte();
 
-
-  //
-  // Tx functions
-  //
-
-  // send a byte array through the VCP peripheral
-  void write(const uint8_t* c, uint8_t len);
-
-  // Is there any data in the buffer that needs to be sent?
-  bool tx_buffer_empty();
-
-  // How many bytes are available in the buffer to be transferred?
-  uint32_t tx_bytes_free();
+    // Check to see if there are bytes to be read.
+    uint32_t rx_bytes_waiting();
 
 
-  // USB bulk mode
-  bool in_bulk_mode();
+    //
+    // Tx functions
+    //
 
-private:
-  // Toggle the tx_pin so the host sees us as a new connection
-  void send_disconnect_signal();
+    // send a byte array through the VCP peripheral
+    void write(const uint8_t* c, uint8_t len);
 
-  // USB pins
-  GPIO rx_pin_;
-  GPIO tx_pin_;
-};
+    // Is there any data in the buffer that needs to be sent?
+    bool tx_buffer_empty();
+
+    // How many bytes are available in the buffer to be transferred?
+    uint32_t tx_bytes_free();
+
+  private:
+    // Toggle the tx_pin so the host sees us as a new connection
+    void send_disconnect_signal();
+
+    // USB pins
+    GPIO rx_pin_;
+    GPIO tx_pin_;
+    GPIO vbus_sense_;
+  };
+
+}
 
 #endif // VCP_H

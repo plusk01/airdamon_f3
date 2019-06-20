@@ -6,7 +6,7 @@
 
 #include "led.h"
 #include "uart.h"
-// #include "vcp.h"
+#include "vcp.h"
 #include "spi.h"
 // #include "pwm.h"
 // #include "flash.h"
