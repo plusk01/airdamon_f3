@@ -1,4 +1,4 @@
-#include <discoveryf3.h>
+#include <revo.h>
 
 int main()
 {
@@ -6,10 +6,10 @@ int main()
 
   LED info;
   LED warn;
-  info.init(GPIOE, GPIO_Pin_13);
-  warn.init(GPIOE, GPIO_Pin_12);
+  info.init(GPIOB, GPIO_Pin_5);
+  warn.init(GPIOB, GPIO_Pin_4);
 
-  VCP vcp;
+  airdamon::VCP vcp;
   vcp.init();
   vcp.connect_to_printf();
 
