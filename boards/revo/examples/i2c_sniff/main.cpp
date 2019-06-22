@@ -33,5 +33,6 @@ int main()
         if (i2c[i].write(j, 0xFF, data))
           printf("I2C%d: found device at 0x%X\n", i+1, j);
     printf("--------------------------\n");
+    delay(100);
   }
 }
