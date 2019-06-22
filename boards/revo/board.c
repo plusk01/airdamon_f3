@@ -23,14 +23,15 @@ void board_init(void)
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
+  // I2C clocks
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
+
   //TODO: Should these be abstracted with the board-specific (ie revo_f4.h) file?
     RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
-
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);

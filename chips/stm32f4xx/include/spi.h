@@ -15,7 +15,7 @@ namespace airdamon {
     // The relevant SPI peripheral
     SPI_TypeDef* SPIx;
     
-    // USART GPIO port and SPI pins
+    // GPIO port and pins for SPI
     GPIO_TypeDef* GPIOx;
     uint16_t sck_pin, miso_pin, mosi_pin;
 

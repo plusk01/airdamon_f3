@@ -8,6 +8,7 @@
 #include "uart.h"
 #include "vcp.h"
 #include "spi.h"
+#include "i2c.h"
 // #include "pwm.h"
 // #include "flash.h"
 
@@ -23,7 +24,7 @@ constexpr int CFG_UART1 = 0;
 constexpr int CFG_UART3 = 1;
 const airdamon::UARTConfig uart_config[NUM_UARTS] = {
   // USARTx, GPIOx, rx_pin, tx_pin, rx_pin_source, tx_pin_source, GPIO_AF, USARTx_IRQn, Tx_DMA_IRQn, Rx_DMA_Stream, Tx_DMA_Stream, DMA_Channel
-  // UART1 is CONN4/MainPort (Doesn't work?)
+  // UART1 is CONN4/MainPort
   {USART1, GPIOA, GPIO_Pin_10, GPIO_Pin_9, GPIO_PinSource10, GPIO_PinSource9, GPIO_AF_USART1, USART1_IRQn, DMA2_Stream7_IRQn, DMA2_Stream5, DMA2_Stream7, DMA_Channel_4},
   // USART3 is CONN1/FlexiPort
   {USART3, GPIOB, GPIO_Pin_11, GPIO_Pin_10, GPIO_PinSource11, GPIO_PinSource10, GPIO_AF_USART3, USART3_IRQn, DMA1_Stream3_IRQn, DMA1_Stream1, DMA1_Stream3, DMA_Channel_4},
@@ -39,6 +40,21 @@ constexpr int CFG_SPI1 = 0;
 //   // SPIx, GPIOx, sck_pin, miso_pin, mosi_pin, sck_pin_source, miso_pin_source, mosi_pin_source, GPIO_AF
 //   {SPI1, GPIOB, GPIO_Pin_3, GPIO_Pin_4, GPIO_Pin_5, GPIO_PinSource3, GPIO_PinSource4, GPIO_PinSource5, GPIO_AF_5, DMA1_Channel2_IRQn, DMA1_Channel2, DMA1_Channel3},
 // };
+
+///////////////////////////////////////////////////////////////////////////////
+//                            I2C Configuration                              //
+///////////////////////////////////////////////////////////////////////////////
+
+constexpr int NUM_I2CS = 2;
+constexpr int CFG_I2C1 = 0;
+constexpr int CFG_I2C2 = 1;
+const airdamon::I2CConfig i2c_config[NUM_I2CS] = {
+  // I2Cx, GPIOx, scl_pin, sda_pin, GPIO_AF, scl_pin_source, sda_pin_source, Rx_DMA_IRQn, I2Cx_EV_IRQn, I2Cx_ER_IRQn, Rx_DMA_Stream, DMA_Channel
+  // I2C1 connects to onboard mag and pressure sensor
+  {I2C1, GPIOB, GPIO_Pin_8, GPIO_Pin_9, GPIO_AF_I2C1, GPIO_PinSource8, GPIO_PinSource9, DMA1_Stream0_IRQn, I2C1_EV_IRQn, I2C1_ER_IRQn, DMA1_Stream0, DMA_Channel_1},
+  // I2C2 is CONN1/FlexiPort
+  {I2C2, GPIOB, GPIO_Pin_10, GPIO_Pin_11, GPIO_AF_I2C2, GPIO_PinSource10, GPIO_PinSource11, DMA1_Stream2_IRQn, I2C2_EV_IRQn, I2C2_ER_IRQn, DMA1_Stream2, DMA_Channel_7},
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //                            PWM Configuration                              //

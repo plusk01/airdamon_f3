@@ -25,12 +25,12 @@ void UART::init(const UARTConfig* config, uint32_t baudrate, Mode mode, bool inv
   cfg_ = config;
 
   // Initialize GPIO pins for USARTx
-  rx_pin_.init(config->GPIOx, config->rx_pin, GPIO::PERIPH_IN);
-  tx_pin_.init(config->GPIOx, config->tx_pin, GPIO::PERIPH_OUT);
+  rx_pin_.init(cfg_->GPIOx, cfg_->rx_pin, GPIO::PERIPH_IN);
+  tx_pin_.init(cfg_->GPIOx, cfg_->tx_pin, GPIO::PERIPH_OUT);
 
   // Set GPIO pins as alternate function
-  GPIO_PinAFConfig(config->GPIOx, config->rx_pin_source, config->GPIO_AF);
-  GPIO_PinAFConfig(config->GPIOx, config->tx_pin_source, config->GPIO_AF);
+  GPIO_PinAFConfig(cfg_->GPIOx, cfg_->rx_pin_source, cfg_->GPIO_AF);
+  GPIO_PinAFConfig(cfg_->GPIOx, cfg_->tx_pin_source, cfg_->GPIO_AF);
 
   // Store the pointer to this object for use in IRQ handlers
   if (cfg_->USARTx == USART1)
@@ -216,16 +216,16 @@ void UART::init_UART(uint32_t baudrate, Mode mode, bool inverted)
 
   if (mode == Mode::m8N1)
   {
-    USART_InitStruct.USART_WordLength           = USART_WordLength_8b;
-    USART_InitStruct.USART_Parity               = USART_Parity_No;
-    USART_InitStruct.USART_StopBits             = USART_StopBits_1;
+    USART_InitStruct.USART_WordLength         = USART_WordLength_8b;
+    USART_InitStruct.USART_Parity             = USART_Parity_No;
+    USART_InitStruct.USART_StopBits           = USART_StopBits_1;
   }
   else if (mode == Mode::m8E2)
   {
     // 9 bit UART word because of the parity bit
-    USART_InitStruct.USART_WordLength           = USART_WordLength_9b;
-    USART_InitStruct.USART_Parity               = USART_Parity_Even;
-    USART_InitStruct.USART_StopBits             = USART_StopBits_2;
+    USART_InitStruct.USART_WordLength         = USART_WordLength_9b;
+    USART_InitStruct.USART_Parity             = USART_Parity_Even;
+    USART_InitStruct.USART_StopBits           = USART_StopBits_2;
   }
 
   USART_Init(cfg_->USARTx, &USART_InitStruct);
@@ -310,7 +310,7 @@ void UART::init_NVIC()
 {
   // Configure the Nested Vector Interrupt Controller
 
-  // DMA Tx Channel Interrupt
+  // DMA Tx Stream Interrupt
   NVIC_InitTypeDef NVIC_InitStruct;
   NVIC_InitStruct.NVIC_IRQChannel = cfg_->Tx_DMA_IRQn;
   NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 1;
