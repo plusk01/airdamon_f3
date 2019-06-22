@@ -6,11 +6,7 @@
 #include "system.h"
 #include "gpio.h"
 
-#define I2C_HIGHSPEED_TIMING  0x00500E30  // 1000 Khz, 72Mhz Clock, Analog Filter Delay ON, Setup 40, Hold 4.
-#define I2C_STANDARD_TIMING   0x00E0257A  // 400 Khz, 72Mhz Clock, Analog Filter Delay ON, Rise 100, Fall 10.
-
 namespace airdamon {
-
 
   struct I2CConfig {
     // The relevant I2C peripheral
@@ -52,8 +48,9 @@ namespace airdamon {
     int8_t read(uint8_t addr, uint8_t reg, uint8_t num_bytes, uint8_t* data, std::function<void(void)> callback, bool blocking = false);
     int8_t write(uint8_t addr, uint8_t reg, uint8_t data, std::function<void(void)> callback);
 
-    bool write(uint8_t addr, uint8_t reg, uint8_t data);
-    int8_t read(uint8_t addr, uint8_t reg, uint8_t *data);
+    bool write(uint8_t addr, uint8_t data);
+    bool write(uint8_t addr, const uint8_t * data, uint8_t len);
+    uint8_t read(uint8_t addr, uint8_t * data, uint8_t len);
 
     inline uint16_t num_errors() { return error_count_; }
 

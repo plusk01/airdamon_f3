@@ -12,6 +12,7 @@
 // #include "pwm.h"
 // #include "flash.h"
 
+#include "ms5611.h"
 // #include "mpu6500.h"
 // #include "rc_sbus.h"
 

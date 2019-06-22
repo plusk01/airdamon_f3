@@ -4,10 +4,9 @@ int main()
 {
   board_init();
 
-  LED info;
-  LED warn;
-  info.init(GPIOB, GPIO_Pin_5);
-  warn.init(GPIOB, GPIO_Pin_4);
+  airdamon::LED info, warn;
+  info.init(GPIOB, GPIO_Pin_5, true);
+  warn.init(GPIOB, GPIO_Pin_4, true);
 
   airdamon::VCP vcp;
   vcp.init();
@@ -25,12 +24,11 @@ int main()
   // There is no real data to send
   uint8_t data = 0;
 
-  while(1)
-  {
+  while(1) {
     info.toggle();
     for (uint8_t i = 0; i<NUM_I2CS; i++)
       for (uint8_t j = 0; j<128; j++)
-        if (i2c[i].write(j, 0xFF, data))
+        if (i2c[i].write(j, &data, 1))
           printf("I2C%d: found device at 0x%X\n", i+1, j);
     printf("--------------------------\n");
     delay(100);
