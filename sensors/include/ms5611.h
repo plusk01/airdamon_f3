@@ -65,7 +65,7 @@ public:
 
   bool present() const { return present_; }
 
-// private:
+private:
   I2C * i2c_; ///< comms dev obj
   bool present_ = false; ///< confirmed that this device is on the bus
   uint8_t addr_ = 0x00; ///< I2C address of the MS5611
@@ -83,8 +83,10 @@ public:
    *             6) C5 calibration coeff
    *             7) C6 calibration coeff
    *             8) serial code and CRC
+   *
+   * @return     True if successful
    */
-  void read_prom();
+  bool read_prom();
 
 };
 

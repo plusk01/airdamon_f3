@@ -27,10 +27,10 @@ int main()
   while(1) {
     warn.toggle();
     
-    for (uint8_t i=0; i<8; ++i) {
-      // printf("I2C%d: found device at 0x%X\n", i+1, j);
-      printf("%d: %d (0x%X)\n", i, baro.prom_[i], baro.prom_[i]);
-    }
+    // for (uint8_t i=0; i<8; ++i) {
+    //   // printf("I2C%d: found device at 0x%X\n", i+1, j);
+    //   printf("%d: %d (0x%X)\n", i, baro.prom_[i], baro.prom_[i]);
+    // }
 
     printf("---------------------------------------\n\n");
     delay(1000);
