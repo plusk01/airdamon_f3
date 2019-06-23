@@ -16,7 +16,7 @@ namespace airdamon {
     GPIO_TypeDef* GPIOx;
     uint16_t scl_pin, sda_pin;
 
-    // SPI alternate function (AF) and pins
+    // I2C alternate function (AF) and pins
     uint8_t GPIO_AF;
     uint8_t scl_pin_source, sda_pin_source;
 
