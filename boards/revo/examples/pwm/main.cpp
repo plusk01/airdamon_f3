@@ -1,5 +1,21 @@
 #include <revo.h>
 
+
+uint32_t get_timer_clock_frequency(void)
+{
+  RCC_ClocksTypeDef RCC_Clocks;
+  RCC_GetClocksFreq (&RCC_Clocks);
+  uint32_t multiplier;
+  if (RCC_Clocks.PCLK1_Frequency == RCC_Clocks.SYSCLK_Frequency) {
+    multiplier = 1;
+  } else {
+    multiplier = 2;
+  }
+  printf("\tPCLK1: %d\tPCLK2: %d\tSYSCLK: %d\n", RCC_Clocks.PCLK1_Frequency,
+                    RCC_Clocks.PCLK2_Frequency, RCC_Clocks.SYSCLK_Frequency);
+  return multiplier * RCC_Clocks.PCLK1_Frequency;
+}
+
 int main()
 {
   board_init();
@@ -16,75 +32,27 @@ int main()
   pwm[0].init(&pwm_config[0], 490, 1000, 2000);
   pwm[1].init(&pwm_config[1], 490, 1000, 2000);
   pwm[2].init(&pwm_config[2], 490, 1000, 2000);
-  pwm[3].init(&pwm_config[3], 490, 1000, 2000);
+  pwm[3].init(&pwm_config[3], 50, 1000, 8000);
 
   printf("\n**** PWM Tester ****\n\n");
 
-  pwm[0].write(0.0f);
-  pwm[1].write(0.5f);
-  pwm[2].write(1.0f);
-
-  pwm[3].init(&pwm_config[3], 50, 1000, 2000);
-  pwm[3].write(1.0f);
-
-  while(1) {
-    info.toggle();
-    delay(250);
-  }
-
-  int i = 1000;
+  int i = 1000, i50 = 1000;
 
   while(1) {
     info.toggle();
 
     i += 100;
-    if (i>2000) i = 1000;
+    i50 += 100;
+    if (i>2000) { warn.toggle(); i = 1000; }
+    if (i50>8000) i50 = 1000;
     pwm[0].write_us(i);
+    pwm[1].write_us(i);
+    pwm[2].write_us(i);
+    pwm[3].write_us(i50);
 
-    delay(500);
-  }
+    delay(50);
 
-  // PWM_OUT esc_out[PWM_NUM_OUTPUTS];
-  // for (int i = 0; i < PWM_NUM_OUTPUTS; ++i)
-  // {
-  //   esc_out[i].init(&pwm_config[i], 490, 2000, 1000);
-  //   esc_out[i].write(1.0);
-  // }
-
-  // // Calibrate ESC
-  // while (millis() < 5000);
-
-  // for (int i = 0; i < PWM_NUM_OUTPUTS; ++i)
-  // {
-  //   esc_out[i].write(0.0);
-  // }
-
-  // while (millis() < 1000);
-
-
-  // bool use_us_driver = true;;
-  // uint32_t throttle = 1000;
-  // while(1)
-  // {
-  //   for (int i = 0; i < PWM_NUM_OUTPUTS; ++i)
-  //   {
-  //     if (use_us_driver)
-  //     {
-  //       esc_out[i].writeUs(throttle);
-  //     }
-  //     else
-  //     {
-  //       esc_out[i].write((float)(throttle - 1000) / 1000.0);
-  //     }
-  //   }
-  //   throttle += 1;
-  //   if (throttle > 2000)
-  //   {
-  //     throttle = 0;
-  //     info.toggle();
-  //     use_us_driver = !use_us_driver;
-  //   }
-  //   delay(2);
-  // }
-  
+    printf("System Core Clock: %d\n", SystemCoreClock);
+    printf("Timer Clock Frew: %d\n", get_timer_clock_frequency());
+  }  
 }

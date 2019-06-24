@@ -1,5 +1,14 @@
 #include "pwm.h"
 
+
+/**
+ * WARNING: This is currently written for brushed motors.
+ * Therefore, commanded 1000 usec == 0% DC
+ * and 2000 usec == 100% DC; which is not the case for
+ * 490 Hz PWM for ESC communication (so that there is
+ * always a pulse).
+ */
+
 namespace airdamon {
 
 void PWM::init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us, GPIO::gpio_write_t state)

@@ -36,7 +36,7 @@ namespace airdamon {
   private:
     // capture/compare register for the relevant channel of the timer
     volatile uint32_t* CCRx_;
-    uint32_t period_;
+    float cntr_steps_per_us_;
     uint32_t min_us_, max_us_;
 
     // GPIO object for the PWM pin
@@ -47,6 +47,8 @@ namespace airdamon {
 
     // low-level peripheral initialization
     void init_TIM(uint16_t frequency);
+
+    uint32_t get_timer_clock_freq();
   };
 
 }
