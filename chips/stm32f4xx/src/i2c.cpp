@@ -42,150 +42,81 @@ void I2C::init(const I2CConfig * config, const ClockSpeed clock_speed)
   // init_NVIC();
   
   // TODO: Remove this hack
-  write(0, 0, 0);
+  write_to(0, 0, 0);
 }
 
 // ----------------------------------------------------------------------------
 
-// blocking write, 1 byte
-bool I2C::write(uint8_t addr, uint8_t data)
+void I2C::set_address(uint8_t addr)
 {
-  uint8_t buf[1] = { data };
-  return write(addr, buf, 1);
+  my_addr_ = addr;
 }
 
 // ----------------------------------------------------------------------------
 
-// blocking write
-bool I2C::write(uint8_t addr, const uint8_t * data, uint8_t len)
+void I2C::begin_tx(uint8_t addr)
 {
-  bool err = false;
-  // if (current_status_ != IDLE) return BUSY;
+  // TODO: Check if busy? Are we in the middle of a master_tx already?
 
-  // Wait for I2C BUSY flag to clear
-  timed_while_check(I2C_GetFlagStatus(cfg_->I2Cx, I2C_FLAG_BUSY) == SET, err);
-  if (err) return false;
 
-  //
-  // Turn off interrupts for blocking write
-  //
+  master_tx_ = true;
 
-  I2C_ITConfig(cfg_->I2Cx, I2C_IT_EVT | I2C_IT_ERR, DISABLE);
-  I2C_Cmd(cfg_->I2Cx, ENABLE);
+  // save address of slave we wish to talk to
+  slave_addr_ = addr;
 
-  //
-  // Generate START condition (which selects Master Mode; refman 27.3.3)
-  //
-  
-  I2C_GenerateSTART(cfg_->I2Cx, ENABLE);
+  // reset transmit buffer
+  tx_buffer_head_ = 0;
+}
 
-  // Wait for the start condition to be released on the bus and for the bus to be quiet
-  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_MODE_SELECT) == ERROR, err);
-  if (err) goto END_TRANSMISSION;
+// ----------------------------------------------------------------------------
 
-  //
-  // Select the slave (by address) that we want to speak to
-  //
+bool I2C::write(uint8_t byte)
+{
+  // If the buffer is full, just don't send this byte
+  if (tx_buffer_head_ >= TX_BUFFER_SIZE) return false;
 
-  // As a Master Transmitter, put onto the bus the slave address we want to speak to
-  I2C_Send7bitAddress(cfg_->I2Cx, addr << 1, I2C_Direction_Transmitter);
+  // Add byte onto the transmit buffer
+  tx_buffer_[tx_buffer_head_++] = byte;
+}
 
-  // Wait for the slave to ACK (or for hardware to set ack failure (AF))
-  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) == ERROR
-          && (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == RESET, err);
-  err = (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == SET;
-  if (err) goto END_TRANSMISSION;
+// ----------------------------------------------------------------------------
 
-  //
-  // Now that we have the slave's attention, send it data
-  //
-
+uint8_t I2C::write(const uint8_t * bytes, uint8_t len)
+{
+  uint8_t n = 0;
   for (uint8_t i=0; i<len; ++i) {
-    I2C_SendData(cfg_->I2Cx, data[i]);
-
-    // wait for the byte to have been written to the data register to be shifted out
-    timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED) == ERROR, err);
-    if (err) goto END_TRANSMISSION;
+    if (write(bytes[i])) n++;
+    else break;
   }
 
-  //
-  // Send STOP condition; return bus to IDLE
-  //
-
-END_TRANSMISSION:
-  I2C_GenerateSTOP(cfg_->I2Cx, ENABLE);
-  I2C_Cmd(cfg_->I2Cx, DISABLE);
-
-  return !err;
+  return n;
 }
 
 // ----------------------------------------------------------------------------
 
-uint8_t I2C::read(uint8_t addr, uint8_t * data, uint8_t len)
+bool I2C::end_tx(bool async, std::function<void(uint8_t)> cb)
 {
-  uint8_t recvd = 0;
-  bool err = false;
-  // if (current_status_ != IDLE) return BUSY;
+  if (!master_tx_) return false;
 
-  // Wait for I2C BUSY flag to clear
-  timed_while_check(I2C_GetFlagStatus(cfg_->I2Cx, I2C_FLAG_BUSY) == SET, err);
-  if (err) return false;
+  // relinquish the role of master on the bus
+  master_tx_ = false;
 
-  //
-  // Turn off interrupts for blocking read
-  //
+  return write_to(slave_addr_, tx_buffer_, tx_buffer_head_);
+}
 
-  I2C_ITConfig(cfg_->I2Cx, I2C_IT_EVT | I2C_IT_ERR, DISABLE);
-  I2C_Cmd(cfg_->I2Cx, ENABLE);
+// ----------------------------------------------------------------------------
 
-  // Be a good listener and acknowledge what the slave says
-  I2C_AcknowledgeConfig(cfg_->I2Cx, ENABLE);
+uint8_t I2C::request_from(uint8_t addr, uint8_t * data, uint8_t exptected_len)
+{
+  return read_from(addr, data, exptected_len);
+}
 
-  //
-  // Generate START condition (which selects Master Mode; refman 27.3.3)
-  //
-  
-  I2C_GenerateSTART(cfg_->I2Cx, ENABLE);
+// ----------------------------------------------------------------------------
 
-  // Wait for the start condition to be released on the bus and for the bus to be quiet
-  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_MODE_SELECT) == ERROR, err);
-  if (err) goto END_TRANSMISSION;
-
-  //
-  // Select the slave (by address) that we want to hear from
-  //
-
-  // As a Master Receiver, put onto the bus the slave address we want to hear from
-  I2C_Send7bitAddress(cfg_->I2Cx, addr << 1, I2C_Direction_Receiver);
-
-  // Wait for the slave to ACK (or for hardware to set ack failure (AF))
-  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED) == ERROR
-          && (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == RESET, err);
-  err = (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == SET;
-  if (err) goto END_TRANSMISSION;
-
-  //
-  // Now that we have the slave's attention, receive its data
-  //
-
-  for (uint8_t i=0; i<len; ++i) {
-    // wait for the byte to have been written to the data register to be shifted out
-    timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED) == ERROR, err);
-    if (err) goto END_TRANSMISSION;
-
-    data[i] = I2C_ReceiveData(cfg_->I2Cx);
-    recvd++;
-  }
-
-  //
-  // Send STOP condition; return bus to IDLE
-  //
-
-END_TRANSMISSION:
-  I2C_GenerateSTOP(cfg_->I2Cx, ENABLE);
-  I2C_Cmd(cfg_->I2Cx, DISABLE);
-
-  return recvd;
+uint8_t I2C::request_from_async(uint8_t addr, uint8_t * data, uint8_t exptected_len,
+                                std::function<void(void)> callback)
+{
+  return read_from(addr, data, exptected_len);
 }
 
 // ----------------------------------------------------------------------------
@@ -247,7 +178,7 @@ void I2C::unstick()
 
   scl_pin_.set_mode(GPIO::PERIPH_IN_OUT);
   sda_pin_.set_mode(GPIO::PERIPH_IN_OUT);
-  current_status_ = IDLE;
+  // current_status_ = IDLE;
 }
 
 // ----------------------------------------------------------------------------
@@ -315,6 +246,140 @@ void I2C::init_NVIC()
   // DMA Rx Stream Interrupt
   NVIC_InitStructure.NVIC_IRQChannel = cfg_->Rx_DMA_IRQn;
   NVIC_Init(&NVIC_InitStructure);
+}
+
+// ----------------------------------------------------------------------------
+
+// blocking write
+bool I2C::write_to(uint8_t addr, const uint8_t * data, uint8_t len)
+{
+  bool err = false;
+  // if (current_status_ != IDLE) return BUSY;
+
+  // Wait for I2C BUSY flag to clear
+  timed_while_check(I2C_GetFlagStatus(cfg_->I2Cx, I2C_FLAG_BUSY) == SET, err);
+  if (err) return false;
+
+  //
+  // Turn off interrupts for blocking write
+  //
+
+  I2C_ITConfig(cfg_->I2Cx, I2C_IT_EVT | I2C_IT_ERR, DISABLE);
+  I2C_Cmd(cfg_->I2Cx, ENABLE);
+
+  //
+  // Generate START condition (which selects Master Mode; refman 27.3.3)
+  //
+  
+  I2C_GenerateSTART(cfg_->I2Cx, ENABLE);
+
+  // Wait for the start condition to be released on the bus and for the bus to be quiet
+  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_MODE_SELECT) == ERROR, err);
+  if (err) goto END_TRANSMISSION;
+
+  //
+  // Select the slave (by address) that we want to speak to
+  //
+
+  // As a Master Transmitter, put onto the bus the slave address we want to speak to
+  I2C_Send7bitAddress(cfg_->I2Cx, addr << 1, I2C_Direction_Transmitter);
+
+  // Wait for the slave to ACK (or for hardware to set ack failure (AF))
+  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) == ERROR
+          && (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == RESET, err);
+  err = (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == SET;
+  if (err) goto END_TRANSMISSION;
+
+  //
+  // Now that we have the slave's attention, send it data
+  //
+
+  for (uint8_t i=0; i<len; ++i) {
+    I2C_SendData(cfg_->I2Cx, data[i]);
+
+    // wait for the byte to have been written to the data register to be shifted out
+    timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED) == ERROR, err);
+    if (err) goto END_TRANSMISSION;
+  }
+
+  //
+  // Send STOP condition; return bus to IDLE
+  //
+
+END_TRANSMISSION:
+  I2C_GenerateSTOP(cfg_->I2Cx, ENABLE);
+  I2C_Cmd(cfg_->I2Cx, DISABLE);
+
+  return !err;
+}
+
+// ----------------------------------------------------------------------------
+
+uint8_t I2C::read_from(uint8_t addr, uint8_t * data, uint8_t exptected_len)
+{
+  uint8_t recvd = 0;
+  bool err = false;
+  // if (current_status_ != IDLE) return BUSY;
+
+  // Wait for I2C BUSY flag to clear
+  timed_while_check(I2C_GetFlagStatus(cfg_->I2Cx, I2C_FLAG_BUSY) == SET, err);
+  if (err) return false;
+
+  //
+  // Turn off interrupts for blocking read
+  //
+
+  I2C_ITConfig(cfg_->I2Cx, I2C_IT_EVT | I2C_IT_ERR, DISABLE);
+  I2C_Cmd(cfg_->I2Cx, ENABLE);
+
+  // Be a good listener and acknowledge what the slave says
+  I2C_AcknowledgeConfig(cfg_->I2Cx, ENABLE);
+
+  //
+  // Generate START condition (which selects Master Mode; refman 27.3.3)
+  //
+  
+  I2C_GenerateSTART(cfg_->I2Cx, ENABLE);
+
+  // Wait for the start condition to be released on the bus and for the bus to be quiet
+  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_MODE_SELECT) == ERROR, err);
+  if (err) goto END_TRANSMISSION;
+
+  //
+  // Select the slave (by address) that we want to hear from
+  //
+
+  // As a Master Receiver, put onto the bus the slave address we want to hear from
+  I2C_Send7bitAddress(cfg_->I2Cx, addr << 1, I2C_Direction_Receiver);
+
+  // Wait for the slave to ACK (or for hardware to set ack failure (AF))
+  timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED) == ERROR
+          && (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == RESET, err);
+  err = (I2C_GetLastEvent(cfg_->I2Cx) & I2C_SR1_AF) == SET;
+  if (err) goto END_TRANSMISSION;
+
+  //
+  // Now that we have the slave's attention, receive its data
+  //
+
+  for (uint8_t i=0; i<exptected_len; ++i) {
+    // wait for the byte to have been written to the data register to be shifted out
+    timed_while_check(I2C_CheckEvent(cfg_->I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED) == ERROR, err);
+    if (err) goto END_TRANSMISSION;
+
+    data[i] = I2C_ReceiveData(cfg_->I2Cx);
+    recvd++;
+  }
+
+  //
+  // Send STOP condition; return bus to IDLE
+  //
+
+END_TRANSMISSION:
+  I2C_GenerateSTOP(cfg_->I2Cx, ENABLE);
+  I2C_Cmd(cfg_->I2Cx, DISABLE);
+
+  return recvd;
 }
 
 } // ns airdamon

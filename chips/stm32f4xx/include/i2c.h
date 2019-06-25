@@ -43,16 +43,25 @@ namespace airdamon {
 
     void init(const I2CConfig * config, const ClockSpeed clock_speed = ClockSpeed::StandardMode100kHz);
 
+    void set_address(uint8_t addr);
+
     void unstick();
     void hardware_failure();
     int8_t read(uint8_t addr, uint8_t reg, uint8_t num_bytes, uint8_t* data, std::function<void(void)> callback, bool blocking = false);
     int8_t write(uint8_t addr, uint8_t reg, uint8_t data, std::function<void(void)> callback);
 
-    bool write(uint8_t addr, uint8_t data);
-    bool write(uint8_t addr, const uint8_t * data, uint8_t len);
-    uint8_t read(uint8_t addr, uint8_t * data, uint8_t len);
+    // master tx
+    void begin_tx(uint8_t addr);
+    bool end_tx(bool async = false, std::function<void(uint8_t)> cb = nullptr);
+    
+    // master rx
+    uint8_t request_from(uint8_t addr, uint8_t * data, uint8_t exptected_len);
+    uint8_t request_from_async(uint8_t addr, uint8_t * data, uint8_t exptected_len, std::function<void(void)> callback);
 
-    inline uint16_t num_errors() { return error_count_; }
+    bool write(uint8_t byte);
+    uint8_t write(const uint8_t * byte, uint8_t len);
+
+    // inline uint16_t num_errors() { return error_count_; }
 
     //interrupt handlers
     bool handle_error();
@@ -70,20 +79,6 @@ namespace airdamon {
 
     void handle_hardware_failure();
 
-    // enum : int8_t
-    // {
-    //   ERROR = 0,
-    //   SUCCESS = 1,
-    //   BUSY = -1
-    // };
-
-    typedef enum
-    {
-      IDLE,
-      READING,
-      WRITING
-    } current_status_t;
-
     // I2C GPIO pins
     GPIO scl_pin_;
     GPIO sda_pin_;
@@ -91,21 +86,25 @@ namespace airdamon {
     // low-level hw configuration for this UART object
     const I2CConfig* cfg_;
 
-    uint16_t error_count_ = 0;
-
-    //Variables for current job:
-    current_status_t current_status_;
-    bool subaddress_sent_ = false;
-    bool done_ = false;
-
-    volatile uint8_t  addr_;
-    volatile uint8_t  reg_;
-    volatile uint8_t  len_;
-    volatile uint8_t data_;
-
     DMA_InitTypeDef DMA_InitStructure_;
 
-    // const i2c_hardware_struct_t *c_;
+    static constexpr int RX_BUFFER_SIZE = 16;
+    static constexpr int TX_BUFFER_SIZE = 16;
+    uint8_t rx_buffer_[RX_BUFFER_SIZE];
+    uint8_t tx_buffer_[TX_BUFFER_SIZE];
+    uint8_t rx_buffer_head_;
+    uint8_t tx_buffer_head_;
+
+    bool master_tx_ = false; ///< True if in master transmit mode
+
+    uint8_t slave_addr_; ///< address of current slave
+    uint8_t my_addr_; ///< my address in slave rx/tx
+
+
+
+    bool write_to(uint8_t addr, const uint8_t * data, uint8_t len);
+    uint8_t read_from(uint8_t addr, uint8_t * data, uint8_t exptected_len);
+
 
     // This constexpr (compile-time) function extracts the underlying
     // value of an enumeration based on its underlying type
