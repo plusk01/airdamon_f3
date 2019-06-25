@@ -2,22 +2,40 @@
 
 namespace airdamon {
 
-void PWM::init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us, GPIO::gpio_write_t state)
+void PWM::init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us)
 {
   cfg_ = config;
 
-  // initialize the GPIO for the output pwm pin
-  pin_.init(config->GPIOx, config->pin, GPIO::PERIPH_OUT);
-  pin_.write(state);
-
-  // Set GPIO pins as alternate function
-  GPIO_PinAFConfig(config->GPIOx, config->pin_source, config->GPIO_AF);
+  // initialize the GPIO for PWM
+  enable();
 
   // save min and max microseconds of PWM
   min_us_ = min_us;
   max_us_ = max_us;
 
   init_TIM(frequency);
+}
+
+// ----------------------------------------------------------------------------
+
+void PWM::enable()
+{
+  // initialize the GPIO for the output pwm pin
+  pin_.init(cfg_->GPIOx, cfg_->pin, GPIO::PERIPH_OUT);
+
+  // Set GPIO pins as alternate function
+  GPIO_PinAFConfig(cfg_->GPIOx, cfg_->pin_source, cfg_->GPIO_AF);
+}
+
+// ----------------------------------------------------------------------------
+
+void PWM::disable()
+{
+  // initialize the GPIO as an output
+  pin_.init(cfg_->GPIOx, cfg_->pin, GPIO::OUTPUT);
+
+  // pull the line low
+  pin_.write(GPIO::LOW);
 }
 
 // ----------------------------------------------------------------------------

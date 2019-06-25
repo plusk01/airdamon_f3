@@ -28,10 +28,13 @@ namespace airdamon {
   class PWM
   {
   public:
-    void init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us, GPIO::gpio_write_t state = GPIO::HIGH);
+    void init(const PWMConfig* config, uint16_t frequency, uint32_t min_us, uint32_t max_us);
 
     void write(float value);
     void write_us(uint16_t value);
+
+    void enable();
+    void disable();
 
   private:
     // capture/compare register for the relevant channel of the timer
