@@ -52,14 +52,17 @@ namespace airdamon {
 
     // master tx
     void begin_tx(uint8_t addr);
+    bool write(uint8_t byte);
+    uint8_t write(const uint8_t * byte, uint8_t len);
     bool end_tx(bool async = false, std::function<void(uint8_t)> cb = nullptr);
     
     // master rx
     uint8_t request_from(uint8_t addr, uint8_t * data, uint8_t exptected_len);
     uint8_t request_from_async(uint8_t addr, uint8_t * data, uint8_t exptected_len, std::function<void(void)> callback);
 
-    bool write(uint8_t byte);
-    uint8_t write(const uint8_t * byte, uint8_t len);
+    // slave tx
+
+    // slave rx
 
     // inline uint16_t num_errors() { return error_count_; }
 

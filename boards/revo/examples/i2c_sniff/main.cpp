@@ -26,10 +26,16 @@ int main()
 
   while(1) {
     info.toggle();
-    for (uint8_t i = 0; i<NUM_I2CS; i++)
-      for (uint8_t j = 0; j<128; j++)
-        if (i2c[i].write(j, &data, 1))
+    for (uint8_t i = 0; i<NUM_I2CS; i++) {
+      for (uint8_t j = 0; j<128; j++) {
+        i2c[i].begin_tx(j);
+        i2c[i].write(data);
+        bool success = i2c[i].end_tx();
+        if (success) {
           printf("I2C%d: found device at 0x%X\n", i+1, j);
+        }
+      }
+    }
     printf("--------------------------\n");
     delay(100);
   }
