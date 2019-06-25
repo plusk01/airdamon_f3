@@ -80,7 +80,6 @@ void GPIO::set_mode(gpio_mode_t mode)
   GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
 
   // Initialize the GPIO
-  GPIO_DeInit(port_);
   GPIO_Init(port_, &GPIO_InitStruct);
   mode_ = mode;
   write(GPIO::LOW);
